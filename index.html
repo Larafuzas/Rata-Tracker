@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#121212">
+    <link rel="manifest" href="./manifest.json">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3069/3069172.png">
+
+    <title>Rata Tracker Offline</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
+
+    <style>
+        /* (MANTENEMOS EL MISMO CSS DE LA V7) */
+        :root { --bg-color: #121212; --surface: #1E1E1E; --surface-2: #2C2C2E; --text-main: #E0E0E0; --text-muted: #888888; --c-rata: #FFB7B2; --c-segregar: #FFDAC1; --c-escaner: #E2F0CB; --c-voluminoso: #B5EAD7; --c-alimentacion: #C7CEEA; --c-rampas: #E0BBE4; --c-top: #F3E5AB; --c-otros: #D3D3D3; --c-auto: #64D2FF; --btn-start: #B5EAD7; --btn-stop: #FFB7B2; --danger: #ff5f56; --safe: #4d4d4d; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Lato', sans-serif; background-color: var(--bg-color); color: var(--text-main); margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        .header-section { padding: 30px 20px 10px; text-align: center; background: var(--bg-color); flex-shrink: 0; }
+        .task-label { font-size: 0.9rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 2px; }
+        .main-timer { font-size: 3.5rem; font-weight: 300; margin: 5px 0; font-variant-numeric: tabular-nums; }
+        .task-scroll { flex: 1; overflow-y: auto; padding: 0 15px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding-bottom: 20px; }
+        .task-btn { padding: 15px; border-radius: 12px; border: none; font-family: 'Lato', sans-serif; font-size: 0.9rem; font-weight: 700; color: #222; opacity: 0.4; transition: transform 0.1s; }
+        .task-btn:active { transform: scale(0.95); }
+        .task-btn.selected { opacity: 1; transform: scale(1); box-shadow: 0 0 15px rgba(255,255,255,0.15); }
+        .t-rata { background: var(--c-rata); } .t-segregar { background: var(--c-segregar); } .t-escaner { background: var(--c-escaner); } .t-voluminoso { background: var(--c-voluminoso); } .t-alimentacion { background: var(--c-alimentacion); } .t-rampas { background: var(--c-rampas); } .t-top { background: var(--c-top); } .t-otros { background: var(--c-otros); }
+        .controls { display: flex; justify-content: center; gap: 30px; padding: 10px; background: linear-gradient(to top, var(--bg-color), transparent); }
+        .c-btn { width: 65px; height: 65px; border-radius: 50%; border: none; font-weight: 900; color: #333; text-transform: uppercase; font-size: 0.8rem; box-shadow: 0 4px 10px rgba(0,0,0,0.4); }
+        .c-start { background: var(--btn-start); } .c-stop { background: var(--btn-stop); } .disabled { opacity: 0.3; pointer-events: none; filter: grayscale(100%); }
+        .auto-bar { background: #1a1a1a; border-top: 1px solid #333; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; color: var(--c-auto); cursor: pointer; }
+        .auto-running { color: #fff; text-shadow: 0 0 5px var(--c-auto); }
+        .history-section { background: var(--surface); height: 50%; display: flex; flex-direction: column; border-top-left-radius: 20px; border-top-right-radius: 20px; box-shadow: 0 -5px 25px rgba(0,0,0,0.6); overflow: hidden; }
+        .tabs { display: flex; background: #111; padding: 5px; }
+        .tab { flex: 1; padding: 10px; text-align: center; font-size: 0.8rem; color: #666; cursor: pointer; border-bottom: 2px solid transparent; }
+        .tab.active { color: #fff; border-bottom: 2px solid var(--btn-start); font-weight: bold; }
+        .history-content { flex: 1; overflow-y: auto; padding: 0; }
+        .summary-box { background: var(--surface-2); margin: 15px; border-radius: 10px; padding: 15px; border: 1px solid #333; }
+        .sum-title { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: #aaa; margin-bottom: 10px; border-bottom: 1px solid #444; padding-bottom: 5px;}
+        .sum-row { display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 5px; }
+        .sum-task { color: #ddd; }
+        .sum-time { font-family: monospace; font-weight: bold; color: var(--btn-start); }
+        .sum-auto { color: var(--c-auto); }
+        .detail-header { padding: 10px 15px 5px; font-size: 0.7rem; color: #666; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid #222; }
+        .log-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; border-bottom: 1px solid #333; font-size: 0.85rem; }
+        .log-auto { border-left: 3px solid var(--c-auto); background: rgba(100, 210, 255, 0.05); }
+        .log-info span { display: block; }
+        .log-task { font-weight: bold; color: #eee; margin-bottom: 2px; }
+        .log-meta { font-size: 0.75rem; color: #777; }
+        .btn-trash { background: none; border: none; font-size: 1.1rem; padding: 5px; opacity: 0.5; }
+        .btn-trash:active { opacity: 1; }
+        .actions-panel { background: #111; border-top: 1px solid #222; padding: 10px; }
+        .actions-row { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+        .act-btn { flex: 1; padding: 10px; border-radius: 6px; border: none; font-size: 0.75rem; font-weight: bold; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; }
+        .btn-del { background: var(--btn-stop); color: #333; } .btn-csv { background: var(--c-voluminoso); color: #333; } .btn-pdf { background: var(--c-escaner); color: #333; } .btn-backup { background: #333; border: 1px solid #444; } .btn-restore { background: #333; border: 1px solid #444; }
+    </style>
+</head>
+<body>
+
+    <div class="header-section">
+        <div class="task-label" id="lblTask">Selecciona Tarea</div>
+        <div class="main-timer" id="displayMain">00:00:00</div>
+    </div>
+
+    <div class="task-scroll">
+        <div class="grid">
+            <button class="task-btn t-rata" onclick="app.selectTask('Rata')">Rata</button>
+            <button class="task-btn t-segregar" onclick="app.selectTask('Segregar')">Segregar</button>
+            <button class="task-btn t-escaner" onclick="app.selectTask('Escáner')">Escáner</button>
+            <button class="task-btn t-voluminoso" onclick="app.selectTask('Voluminoso')">Voluminoso</button>
+            <button class="task-btn t-alimentacion" onclick="app.selectTask('Alimentación')">Alimentación</button>
+            <button class="task-btn t-rampas" onclick="app.selectTask('Rampas')">Rampas</button>
+            <button class="task-btn t-top" onclick="app.selectTask('Top/Cosmos')">Top/Cosmos</button>
+            <button class="task-btn t-otros" onclick="app.selectTask('Otros')">Otros</button>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button id="btnStart" class="c-btn c-start disabled" onclick="app.start()">Start</button>
+        <button id="btnStop" class="c-btn c-stop disabled" onclick="app.stop()">Stop</button>
+    </div>
+
+    <div class="auto-bar" id="autoBar" onclick="app.toggleAuto()">
+        <span>⚡ Automatización <small id="lblAutoStatus">(Off)</small></span>
+        <span style="font-family: monospace; font-size: 1rem;" id="displayAuto">00:00:00</span>
+    </div>
+
+    <div class="history-section">
+        <div class="tabs">
+            <div class="tab active" onclick="app.setFilter('day', this)">Día</div>
+            <div class="tab" onclick="app.setFilter('week', this)">Semana</div>
+            <div class="tab" onclick="app.setFilter('month', this)">Mes</div>
+        </div>
+        
+        <div class="history-content" id="historyContainer"></div>
+
+        <div class="actions-panel">
+            <div class="actions-row">
+                <button class="act-btn btn-del" onclick="app.clearAll()">🗑 Borrar Todo</button>
+                <button class="act-btn btn-csv" onclick="app.export('csv')">CSV</button>
+                <button class="act-btn btn-pdf" onclick="app.export('pdf')">PDF</button>
+            </div>
+            <div class="actions-row">
+                <button class="act-btn btn-backup" onclick="app.backup()">💾 Copia Seguridad</button>
+                <button class="act-btn btn-restore" onclick="app.triggerRestore()">📂 Restaurar</button>
+            </div>
+        </div>
+    </div>
+
+    <input type="file" id="fileInput" style="display:none" onchange="app.importData(this)">
+
+    <script>
+        // REGISTRO DEL SERVICE WORKER
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('Service Worker registrado:', reg))
+                    .catch(err => console.log('Error SW:', err));
+            });
+        }
+
+        const { jsPDF } = window.jspdf;
+
+        class RataTrackerV7 {
+            constructor() {
+                this.state = { task: null, isRunning: false, startTime: null, isAuto: false, autoStart: null, history: [], filterMode: 'day' };
+                this.autoTriggers = ["Alimentación", "Rampas", "Top/Cosmos"];
+                this.dom = {};
+                this.init();
+            }
+
+            init() { this.load(); this.cacheDOM(); this.render(); setInterval(() => this.tick(), 100); }
+            cacheDOM() { this.dom.lblTask = document.getElementById('lblTask'); this.dom.mainDisplay = document.getElementById('displayMain'); this.dom.autoDisplay = document.getElementById('displayAuto'); this.dom.lblAuto = document.getElementById('lblAutoStatus'); this.dom.autoBar = document.getElementById('autoBar'); this.dom.btnStart = document.getElementById('btnStart'); this.dom.btnStop = document.getElementById('btnStop'); this.dom.container = document.getElementById('historyContainer'); }
+
+            selectTask(name) {
+                document.querySelectorAll('.task-btn').forEach(b => { b.classList.remove('selected'); if(b.innerText === name) b.classList.add('selected'); });
+                if (this.state.isRunning) {
+                    if (this.state.task === name) return;
+                    this.saveSession(this.state.task, this.state.startTime);
+                    this.state.task = name; this.state.startTime = Date.now();
+                    this.checkAutoLogic(name);
+                } else {
+                    this.state.task = name; this.dom.lblTask.innerText = name; this.dom.mainDisplay.innerText = "00:00:00"; this.dom.btnStart.classList.remove('disabled');
+                }
+                this.render();
+            }
+
+            start() { if(!this.state.task || this.state.isRunning) return; this.state.isRunning = true; this.state.startTime = Date.now(); this.checkAutoLogic(this.state.task); this.render(); }
+            stop() { if(!this.state.isRunning) return; this.saveSession(this.state.task, this.state.startTime); this.state.isRunning = false; this.state.startTime = null; if(this.state.isAuto) this.toggleAuto(); this.render(); }
+            checkAutoLogic(newTaskName) { const isNextAuto = this.autoTriggers.includes(newTaskName); if (isNextAuto && !this.state.isAuto) this.toggleAuto(); else if (!isNextAuto && this.state.isAuto) this.toggleAuto(); }
+            toggleAuto() { if(this.state.isAuto) { this.saveSession("⚡ AUTOMATIZACIÓN", this.state.autoStart, true); this.state.isAuto = false; this.state.autoStart = null; } else { this.state.isAuto = true; this.state.autoStart = Date.now(); } this.render(); }
+
+            saveSession(taskName, startTime, isAutoLog = false) { if(!startTime) return; const now = Date.now(); const duration = Math.floor((now - startTime) / 1000); if (duration < 1) return; this.state.history.unshift({ id: Date.now() + Math.random(), task: taskName, start: startTime, end: now, duration: duration, isAuto: isAutoLog }); this.save(); this.renderHistory(); }
+
+            tick() { const now = Date.now(); if(this.state.isRunning && this.state.startTime) this.dom.mainDisplay.innerText = this.formatTime(now - this.state.startTime); if(this.state.isAuto && this.state.autoStart) this.dom.autoDisplay.innerText = this.formatTime(now - this.state.autoStart); else this.dom.autoDisplay.innerText = "00:00:00"; }
+            
+            render() { 
+                if (this.state.isRunning) { this.dom.btnStart.classList.add('disabled'); this.dom.btnStop.classList.remove('disabled'); this.dom.lblTask.innerText = this.state.task; } else { this.dom.btnStart.classList.toggle('disabled', !this.state.task); this.dom.btnStop.classList.add('disabled'); if(!this.state.task) this.dom.lblTask.innerText = "Selecciona Tarea"; }
+                if (this.state.isAuto) { this.dom.lblAuto.innerText = "(ON)"; this.dom.autoBar.classList.add('auto-running'); } else { this.dom.lblAuto.innerText = "(Off)"; this.dom.autoBar.classList.remove('auto-running'); }
+                this.renderHistory();
+            }
+
+            renderHistory() {
+                const data = this.getFilteredData(); this.dom.container.innerHTML = "";
+                if(data.length === 0) { this.dom.container.innerHTML = `<div style="text-align:center; padding:20px; color:#444">Sin actividad</div>`; return; }
+                const summaryData = this.calculateSummary(data); const sumBox = document.createElement('div'); sumBox.className = 'summary-box'; let sumHtml = `<div class="sum-title">RESUMEN TOTAL (${this.getFilterName()})</div>`; summaryData.forEach(s => { sumHtml += `<div class="sum-row"><span class="sum-task ${s.task.includes('AUTOMATIZACIÓN') ? 'sum-auto' : ''}">${s.task}</span><span class="sum-time">${this.formatTime(s.total * 1000)}</span></div>`; }); sumBox.innerHTML = sumHtml; this.dom.container.appendChild(sumBox);
+                const header = document.createElement('div'); header.className = 'detail-header'; header.innerText = 'Detalle de registros'; this.dom.container.appendChild(header);
+                const listDiv = document.createElement('div'); data.forEach(item => { const el = document.createElement('div'); el.className = `log-item ${item.isAuto ? 'log-auto' : ''}`; const date = new Date(item.start); const day = date.toLocaleDateString(undefined, {weekday:'short', day:'numeric'}); const time = `${date.getHours()}:${date.getMinutes().toString().padStart(2,'0')}`; el.innerHTML = `<div class="log-info"><span class="log-task" style="${item.isAuto ? 'color:var(--c-auto)' : ''}">${item.task}</span><span class="log-meta">${day} • ${time}</span></div><div style="display:flex; align-items:center; gap:10px;"><span style="font-family:monospace; color:${item.isAuto ? 'var(--c-auto)' : 'var(--btn-start)'}">${this.formatTime(item.duration * 1000)}</span><button class="btn-trash" onclick="app.deleteItem(${item.id})">🗑</button></div>`; listDiv.appendChild(el); }); this.dom.container.appendChild(listDiv);
+            }
+
+            getFilteredData() { const now = new Date(); const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime(); const day = now.getDay() || 7; const startOfWeek = new Date(startOfDay - (day - 1) * 86400000).getTime(); const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime(); return this.state.history.filter(item => { if(this.state.filterMode === 'day') return item.start >= startOfDay; if(this.state.filterMode === 'week') return item.start >= startOfWeek; if(this.state.filterMode === 'month') return item.start >= startOfMonth; return true; }); }
+            calculateSummary(data) { const map = {}; data.forEach(d => { if (!map[d.task]) map[d.task] = 0; map[d.task] += d.duration; }); return Object.keys(map).map(k => ({ task: k, total: map[k] })).sort((a,b) => b.total - a.total); }
+            setFilter(mode, el) { this.state.filterMode = mode; document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); el.classList.add('active'); this.renderHistory(); }
+            getFilterName() { return {'day':'Diario', 'week':'Semanal', 'month':'Mensual'}[this.state.filterMode]; }
+            deleteItem(id) { if(confirm("¿Eliminar?")) { this.state.history = this.state.history.filter(i => i.id !== id); this.save(); this.renderHistory(); } }
+            clearAll() { if(confirm("¿BORRAR TODO?")) { this.state.history = []; this.save(); location.reload(); } }
+            export(type) { const data = this.getFilteredData(); if(data.length === 0) return alert("Sin datos"); const summary = this.calculateSummary(data); const period = this.getFilterName(); if (type === 'csv') { let csv = `REPORTE ${period.toUpperCase()}\n\nRESUMEN AGRUPADO\nTarea,Tiempo Total\n`; summary.forEach(s => csv += `${s.task},${this.formatTime(s.total*1000)}\n`); csv += `\nDETALLE CRONOLOGICO\nFecha,Hora,Tarea,Duracion\n`; data.forEach(d => csv += `${new Date(d.start).toLocaleDateString()},${new Date(d.start).toLocaleTimeString()},${d.task},${this.formatTime(d.duration*1000)}\n`); this.download(csv, `RataTracker_${period}.csv`, 'text/csv'); } else if (type === 'pdf') { const doc = new jsPDF(); doc.setFontSize(16); doc.text(`Rata Tracker - ${period}`, 14, 20); doc.setFontSize(10); doc.text(`Generado: ${new Date().toLocaleString()}`, 14, 28); doc.text("RESUMEN TOTALIZADO", 14, 40); doc.autoTable({ startY: 45, head: [['Tarea', 'Total']], body: summary.map(s => [s.task, this.formatTime(s.total*1000)]), theme: 'grid', headStyles: { fillColor: [40, 40, 40] } }); doc.text("DETALLE DE REGISTROS", 14, doc.lastAutoTable.finalY + 15); doc.autoTable({ startY: doc.lastAutoTable.finalY + 20, head: [['Hora', 'Tarea', 'Duración']], body: data.map(d => [new Date(d.start).toLocaleTimeString(), d.task, this.formatTime(d.duration*1000)]), theme: 'striped', styles: { fontSize: 9 } }); doc.save(`RataTracker_${period}.pdf`); } }
+            backup() { const data = JSON.stringify(this.state); const date = new Date().toISOString().slice(0,10); this.download(data, `RataBackup_${date}.json`, 'application/json'); }
+            triggerRestore() { if(confirm("⚠ PRECAUCIÓN: Al restaurar se sobrescribirán los datos actuales. ¿Deseas continuar?")) { document.getElementById('fileInput').click(); } }
+            importData(input) { const file = input.files[0]; if(!file) return; const reader = new FileReader(); reader.onload = (e) => { try { const importedData = JSON.parse(e.target.result); if(importedData.history && Array.isArray(importedData.history)) { this.state = importedData; this.save(); alert("✅ Datos restaurados con éxito."); location.reload(); } else { alert("❌ Archivo de copia no válido."); } } catch(err) { alert("❌ Error al leer el archivo."); } }; reader.readAsText(file); }
+            download(content, name, mime) { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([content], {type:mime})); a.download = name; a.click(); }
+            formatTime(ms) { const s = Math.floor(ms / 1000); return new Date(s * 1000).toISOString().substr(11, 8); }
+            save() { localStorage.setItem('rata_v7', JSON.stringify(this.state)); }
+            load() { const s = localStorage.getItem('rata_v7'); if(s) this.state = JSON.parse(s); }
+        }
+
+        const app = new RataTrackerV7();
+    </script>
+</body>
+</html>
