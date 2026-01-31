@@ -1,12 +1,12 @@
-const CACHE_NAME = "rata-tracker-v9"; // <--- CAMBIO AQUÍ
+const CACHE_NAME = "rata-tracker-v10";
 const ASSETS = [
   "./",
   "./index.html",
   "./manifest.json",
+  "./icon.png",
   "https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&display=swap",
   "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js",
-  "https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js",
-  "https://cdn-icons-png.flaticon.com/512/3069/3069172.png"
+  "https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"
 ];
 
 self.addEventListener("install", (e) => {
