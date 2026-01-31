@@ -1,4 +1,4 @@
-const CACHE_NAME = "rata-tracker-v8";
+const CACHE_NAME = "rata-tracker-v9"; // <--- CAMBIO AQUÍ
 const ASSETS = [
   "./",
   "./index.html",
@@ -9,16 +9,10 @@ const ASSETS = [
   "https://cdn-icons-png.flaticon.com/512/3069/3069172.png"
 ];
 
-// 1. INSTALACIÓN: Guarda los archivos en caché
 self.addEventListener("install", (e) => {
-  e.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS);
-    })
-  );
+  e.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS)));
 });
 
-// 2. ACTIVACIÓN: Limpia cachés viejas si actualizamos la versión
 self.addEventListener("activate", (e) => {
   e.waitUntil(
     caches.keys().then((keys) => {
@@ -31,11 +25,8 @@ self.addEventListener("activate", (e) => {
   );
 });
 
-// 3. INTERCEPTOR: Sirve la caché si no hay red
 self.addEventListener("fetch", (e) => {
   e.respondWith(
-    caches.match(e.request).then((response) => {
-      return response || fetch(e.request);
-    })
+    caches.match(e.request).then((response) => response || fetch(e.request))
   );
 });
