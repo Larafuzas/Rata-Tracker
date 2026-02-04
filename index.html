@@ -11,7 +11,7 @@
     <link rel="manifest" href="./manifest.json">
     <link rel="apple-touch-icon" href="./icon.png">
 
-    <title>Rata Tracker V12</title>
+    <title>Rata Tracker V13</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -22,10 +22,12 @@
         :root {
             --bg-color: #121212; --surface: #1E1E1E; --surface-2: #2C2C2E; --nav-bg: #000000;
             --text-main: #E0E0E0; --text-muted: #888888;
-            /* Paleta Pastel (Coincide con JS) */
+            /* Paleta Pastel */
             --c-rata: #FFB7B2; --c-segregar: #FFDAC1; --c-escaner: #E2F0CB; --c-voluminoso: #B5EAD7;
-            --c-alimentacion: #C7CEEA; --c-rampas: #E0BBE4; --c-top: #F3E5AB; --c-otros: #D3D3D3;
-            --c-auto: #64D2FF; 
+            --c-alimentacion: #C7CEEA; --c-rampas: #E0BBE4; --c-top: #F3E5AB; 
+            --c-hoffmann: #F6EAC2; /* Nuevo color Hoffmann */
+            --c-otros: #D3D3D3;
+            --c-auto: #FFA500; /* Naranja para texto auto */
             /* UI */
             --btn-start: #B5EAD7; --btn-stop: #FFB7B2; --danger: #ff5f56;
             --active-tracker: #B5EAD7; --active-history: #E0BBE4;
@@ -52,7 +54,8 @@
         .task-btn.selected { opacity: 1; transform: scale(1); box-shadow: 0 0 15px rgba(255,255,255,0.15); }
         
         .t-rata { background: var(--c-rata); } .t-segregar { background: var(--c-segregar); } .t-escaner { background: var(--c-escaner); } .t-voluminoso { background: var(--c-voluminoso); }
-        .t-alimentacion { background: var(--c-alimentacion); } .t-rampas { background: var(--c-rampas); } .t-top { background: var(--c-top); } .t-otros { background: var(--c-otros); }
+        .t-alimentacion { background: var(--c-alimentacion); } .t-rampas { background: var(--c-rampas); } .t-top { background: var(--c-top); } 
+        .t-hoffmann { background: var(--c-hoffmann); } .t-otros { background: var(--c-otros); }
 
         /* CONTROLES */
         .controls { display: flex; justify-content: center; gap: 40px; padding: 20px; background: linear-gradient(to top, var(--bg-color), transparent); }
@@ -60,17 +63,12 @@
         .c-start { background: var(--btn-start); } .c-stop { background: var(--btn-stop); }
         .disabled { opacity: 0.3; pointer-events: none; filter: grayscale(100%); }
 
-        .auto-bar { background: #1a1a1a; border-top: 1px solid #333; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; color: var(--c-auto); cursor: pointer; }
-        .auto-running { color: #fff; text-shadow: 0 0 5px var(--c-auto); }
+        .auto-bar { background: #1a1a1a; border-top: 1px solid #333; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; color: #64D2FF; cursor: pointer; }
+        .auto-running { color: #fff; text-shadow: 0 0 5px #64D2FF; }
 
         /* HISTORIAL */
         .history-full-container { flex: 1; display: flex; flex-direction: column; background: var(--surface); height: 100%; }
-        
-        /* Navegación de Fecha */
-        .date-nav {
-            display: flex; justify-content: space-between; align-items: center;
-            background: #222; padding: 10px 15px; color: #fff; border-bottom: 1px solid #333;
-        }
+        .date-nav { display: flex; justify-content: space-between; align-items: center; background: #222; padding: 10px 15px; color: #fff; border-bottom: 1px solid #333; }
         .date-nav button { background: none; border: none; color: var(--active-tracker); font-size: 1.5rem; cursor: pointer; padding: 0 10px; }
         .date-display { font-size: 0.9rem; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
 
@@ -79,24 +77,25 @@
         .tab.active { color: #fff; border-bottom: 2px solid var(--btn-start); font-weight: bold; }
 
         .history-content { flex: 1; overflow-y: auto; padding: 0; }
-        
-        /* GRÁFICA */
-        .chart-container {
-            margin: 20px; padding: 15px; background: var(--surface-2);
-            border-radius: 12px; border: 1px solid #333;
-            height: 250px; display: flex; justify-content: center;
-        }
+        .chart-container { margin: 20px; padding: 15px; background: var(--surface-2); border-radius: 12px; border: 1px solid #333; height: 250px; display: flex; justify-content: center; }
 
         .summary-box { background: var(--surface-2); margin: 0 20px 20px 20px; border-radius: 12px; padding: 20px; border: 1px solid #333; }
         .sum-title { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; color: #aaa; margin-bottom: 12px; border-bottom: 1px solid #444; padding-bottom: 8px;}
         .sum-row { display: flex; justify-content: space-between; font-size: 1rem; margin-bottom: 8px; }
-        .sum-task { color: #ddd; } .sum-time { font-family: monospace; font-weight: bold; color: var(--btn-start); } .sum-auto { color: var(--c-auto); }
-
-        .detail-header { padding: 15px 20px 5px; font-size: 0.8rem; color: #666; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid #222; }
-        .log-item { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; border-bottom: 1px solid #333; font-size: 0.9rem; }
-        .log-auto { border-left: 4px solid var(--c-auto); background: rgba(100, 210, 255, 0.05); }
-        .log-info span { display: block; } .log-task { font-weight: bold; color: #eee; margin-bottom: 4px; } .log-meta { font-size: 0.8rem; color: #777; }
+        .sum-task { color: #ddd; } 
         
+        /* ESTILO NUEVO AUTOMATIZACIÓN EN TABLA */
+        .sum-auto { color: var(--c-auto) !important; font-weight: bold; text-transform: lowercase; }
+
+        .log-item { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; border-bottom: 1px solid #333; font-size: 0.9rem; }
+        .log-auto-border { border-left: 4px solid var(--c-auto); background: rgba(255, 165, 0, 0.05); }
+        .log-info span { display: block; } 
+        .log-task { font-weight: bold; color: #eee; margin-bottom: 4px; } 
+        .log-meta { font-size: 0.8rem; color: #777; }
+        
+        /* ESTILO NUEVO AUTOMATIZACIÓN EN LISTA */
+        .text-automation { color: var(--c-auto) !important; font-weight: bold; text-transform: lowercase; }
+
         .btn-icon { background: none; border: none; font-size: 1.2rem; padding: 5px; opacity: 0.5; cursor: pointer; margin-left: 8px;}
         .btn-icon:active { opacity: 1; }
 
@@ -105,32 +104,20 @@
         .act-btn { flex: 1; padding: 12px; border-radius: 8px; border: none; font-size: 0.8rem; font-weight: bold; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
         .btn-del { background: var(--btn-stop); color: #333; } .btn-csv { background: var(--c-voluminoso); color: #333; } .btn-pdf { background: var(--c-escaner); color: #333; } .btn-backup { background: #333; border: 1px solid #444; } .btn-restore { background: #333; border: 1px solid #444; }
 
-        /* NAVBAR MINIMALISTA */
+        /* NAVBAR */
         .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 70px; background: var(--nav-bg); border-top: 1px solid #222; display: flex; justify-content: center; gap: 40px; align-items: center; z-index: 100; }
         .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; background: none; border: none; cursor: pointer; color: #444; transition: all 0.2s; }
         .nav-letter { width: 35px; height: 35px; border-radius: 50%; background: #222; color: #888; font-family: 'Lato', sans-serif; font-weight: 900; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; margin-bottom: 4px; transition: all 0.2s; }
         .nav-text { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
-        .nav-item.active#nav-tracker .nav-letter { background: var(--active-tracker); color: #000; transform: scale(1.1); }
-        .nav-item.active#nav-tracker .nav-text { color: var(--active-tracker); }
-        .nav-item.active#nav-history .nav-letter { background: var(--active-history); color: #000; transform: scale(1.1); }
-        .nav-item.active#nav-history .nav-text { color: var(--active-history); }
+        .nav-item.active#nav-tracker .nav-letter { background: var(--active-tracker); color: #000; transform: scale(1.1); } .nav-item.active#nav-tracker .nav-text { color: var(--active-tracker); }
+        .nav-item.active#nav-history .nav-letter { background: var(--active-history); color: #000; transform: scale(1.1); } .nav-item.active#nav-history .nav-text { color: var(--active-history); }
 
-        /* MODAL DE EDICIÓN */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8); z-index: 200;
-            display: none; justify-content: center; align-items: center;
-        }
-        .modal-content {
-            background: var(--surface); width: 90%; max-width: 350px;
-            border-radius: 12px; padding: 20px; border: 1px solid #444;
-        }
-        .modal-title { color: #fff; margin-top: 0; text-align: center; }
+        /* MODALES */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 200; display: none; justify-content: center; align-items: center; }
+        .modal-content { background: var(--surface); width: 90%; max-width: 350px; border-radius: 12px; padding: 20px; border: 1px solid #444; }
+        .modal-title { color: #fff; margin-top: 0; text-align: center; margin-bottom: 20px; }
         .modal-label { display: block; color: #888; margin: 10px 0 5px; font-size: 0.8rem; }
-        .modal-input {
-            width: 100%; padding: 10px; background: #000; border: 1px solid #333;
-            color: #fff; font-size: 1rem; border-radius: 6px;
-        }
+        .modal-input { width: 100%; padding: 10px; background: #000; border: 1px solid #333; color: #fff; font-size: 1rem; border-radius: 6px; }
         .modal-actions { margin-top: 20px; display: flex; gap: 10px; }
     </style>
 </head>
@@ -150,7 +137,8 @@
                 <button class="task-btn t-alimentacion" onclick="app.selectTask('Alimentación')">Alimentación</button>
                 <button class="task-btn t-rampas" onclick="app.selectTask('Rampas')">Rampas</button>
                 <button class="task-btn t-top" onclick="app.selectTask('Top/Cosmos')">Top/Cosmos</button>
-                <button class="task-btn t-otros" onclick="app.selectTask('Otros')">Otros</button>
+                <button class="task-btn t-hoffmann" onclick="app.selectTask('Hoffmann')">Hoffmann</button>
+                <button class="task-btn t-otros" onclick="app.promptOther()">Otros</button>
             </div>
         </div>
         <div class="controls">
@@ -179,14 +167,13 @@
                 </div>
             </div>
             
-            <div class="history-content" id="historyContainer">
-                </div>
+            <div class="history-content" id="historyContainer"></div>
 
             <div class="actions-panel">
                 <div class="actions-row">
                     <button class="act-btn btn-del" onclick="app.clearAll()">🗑 Borrar</button>
-                    <button class="act-btn btn-csv" onclick="app.export('csv')">CSV</button>
-                    <button class="act-btn btn-pdf" onclick="app.export('pdf')">PDF</button>
+                    <button class="act-btn btn-csv" onclick="app.openExportModal('csv')">CSV</button>
+                    <button class="act-btn btn-pdf" onclick="app.openExportModal('pdf')">PDF</button>
                 </div>
                 <div class="actions-row">
                     <button class="act-btn btn-backup" onclick="app.backup()">💾 Backup</button>
@@ -209,19 +196,43 @@
         <div class="modal-content">
             <h3 class="modal-title">Editar Registro</h3>
             <input type="hidden" id="editId">
-            
             <label class="modal-label">Tarea</label>
             <input type="text" id="editTaskName" class="modal-input" disabled style="opacity:0.6">
-
             <label class="modal-label">Hora Inicio</label>
             <input type="datetime-local" id="editStart" class="modal-input">
-
             <label class="modal-label">Hora Fin</label>
             <input type="datetime-local" id="editEnd" class="modal-input">
-
             <div class="modal-actions">
                 <button class="act-btn btn-del" onclick="document.getElementById('editModal').style.display='none'">Cancelar</button>
                 <button class="act-btn btn-start" style="color:#000" onclick="app.saveEdit()">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="exportModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 class="modal-title">Opciones de Exportación</h3>
+            <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:20px;">
+                <button class="act-btn btn-start" style="color:#000" onclick="app.exportCurrent()">Exportar Periodo Actual</button>
+                <div style="text-align:center; font-size:0.8rem; color:#888;">— O —</div>
+                <label class="modal-label">Fecha Inicio</label>
+                <input type="date" id="expStart" class="modal-input">
+                <label class="modal-label">Fecha Fin</label>
+                <input type="date" id="expEnd" class="modal-input">
+                <button class="act-btn btn-csv" onclick="app.exportRange()">Exportar Rango Personalizado</button>
+            </div>
+            <button class="act-btn btn-del" onclick="document.getElementById('exportModal').style.display='none'">Cerrar</button>
+        </div>
+    </div>
+
+    <div id="otherModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 class="modal-title">Nueva Actividad</h3>
+            <label class="modal-label">Nombre de la actividad:</label>
+            <input type="text" id="otherInput" class="modal-input" placeholder="Ej: Mantenimiento">
+            <div class="modal-actions">
+                <button class="act-btn btn-del" onclick="document.getElementById('otherModal').style.display='none'">Cancelar</button>
+                <button class="act-btn btn-start" style="color:#000" onclick="app.confirmOther()">Aceptar</button>
             </div>
         </div>
     </div>
@@ -235,24 +246,23 @@
 
         const { jsPDF } = window.jspdf;
 
-        // Configuración de colores para Chart.js
+        // Colores Chart.js (incluido Hoffmann)
         const CHART_COLORS = {
             'Rata': '#FFB7B2', 'Segregar': '#FFDAC1', 'Escáner': '#E2F0CB', 'Voluminoso': '#B5EAD7',
-            'Alimentación': '#C7CEEA', 'Rampas': '#E0BBE4', 'Top/Cosmos': '#F3E5AB', 'Otros': '#D3D3D3',
-            '⚡ AUTOMATIZACIÓN': '#64D2FF'
+            'Alimentación': '#C7CEEA', 'Rampas': '#E0BBE4', 'Top/Cosmos': '#F3E5AB', 'Hoffmann': '#F6EAC2', 
+            'Otros': '#D3D3D3', 'automatización': '#FFA500'
         };
 
-        class RataTrackerV12 {
+        class RataTrackerV13 {
             constructor() {
                 this.state = { 
                     task: null, isRunning: false, startTime: null, 
                     isAuto: false, autoStart: null, history: [], 
-                    filterMode: 'day', 
-                    currentDate: new Date().getTime() // Fecha de navegación
+                    filterMode: 'day', currentDate: new Date().getTime() 
                 };
                 this.autoTriggers = ["Alimentación", "Rampas", "Top/Cosmos"];
                 this.dom = {};
-                this.chartInstance = null;
+                this.exportTypePending = null;
                 this.init();
             }
 
@@ -264,7 +274,6 @@
                 this.dom.lblCurrentDate = document.getElementById('lblCurrentDate');
             }
 
-            // --- NAVEGACIÓN Y TABS ---
             switchTab(tab) {
                 if (tab === 'tracker') { this.dom.viewTracker.classList.add('active-view'); this.dom.viewHistory.classList.remove('active-view'); this.dom.navTracker.classList.add('active'); this.dom.navHistory.classList.remove('active'); } 
                 else { this.dom.viewTracker.classList.remove('active-view'); this.dom.viewHistory.classList.add('active-view'); this.dom.navTracker.classList.remove('active'); this.dom.navHistory.classList.add('active'); this.renderHistory(); }
@@ -276,12 +285,11 @@
                 else if (this.state.filterMode === 'week') date.setDate(date.getDate() + (direction * 7));
                 else if (this.state.filterMode === 'month') date.setMonth(date.getMonth() + direction);
                 else if (this.state.filterMode === 'year') date.setFullYear(date.getFullYear() + direction);
-                
                 this.state.currentDate = date.getTime();
                 this.renderHistory();
             }
 
-            // --- CORE LOGIC ---
+            // --- LÓGICA PRINCIPAL ---
             selectTask(name) {
                 document.querySelectorAll('.task-btn').forEach(b => { b.classList.remove('selected'); if(b.innerText === name) b.classList.add('selected'); });
                 if (this.state.isRunning) {
@@ -295,10 +303,37 @@
                 }
                 this.render();
             }
+
+            // Manejo de "Otros"
+            promptOther() {
+                document.getElementById('otherInput').value = "";
+                document.getElementById('otherModal').style.display = 'flex';
+                document.getElementById('otherInput').focus();
+            }
+
+            confirmOther() {
+                const name = document.getElementById('otherInput').value.trim();
+                if(name) {
+                    this.selectTask(name); // Inicia la tarea con el nombre personalizado
+                }
+                document.getElementById('otherModal').style.display = 'none';
+            }
+
             start() { if(!this.state.task || this.state.isRunning) return; this.state.isRunning = true; this.state.startTime = Date.now(); this.save(); this.checkAutoLogic(this.state.task); this.render(); }
             stop() { if(!this.state.isRunning) return; this.saveSession(this.state.task, this.state.startTime); this.state.isRunning = false; this.state.startTime = null; if(this.state.isAuto) this.toggleAuto(); this.save(); this.render(); }
             checkAutoLogic(newTaskName) { const isNextAuto = this.autoTriggers.includes(newTaskName); if (isNextAuto && !this.state.isAuto) this.toggleAuto(); else if (!isNextAuto && this.state.isAuto) this.toggleAuto(); }
-            toggleAuto() { if(this.state.isAuto) { this.saveSession("⚡ AUTOMATIZACIÓN", this.state.autoStart, true); this.state.isAuto = false; this.state.autoStart = null; } else { this.state.isAuto = true; this.state.autoStart = Date.now(); } this.save(); this.render(); }
+            
+            toggleAuto() { 
+                if(this.state.isAuto) { 
+                    // GUARDAR COMO "automatización" (minúscula, sin emoji)
+                    this.saveSession("automatización", this.state.autoStart, true); 
+                    this.state.isAuto = false; this.state.autoStart = null; 
+                } else { 
+                    this.state.isAuto = true; this.state.autoStart = Date.now(); 
+                } 
+                this.save(); this.render(); 
+            }
+
             saveSession(taskName, startTime, isAutoLog = false) { if(!startTime) return; const now = Date.now(); const duration = Math.floor((now - startTime) / 1000); if (duration < 1) return; this.state.history.unshift({ id: Date.now() + Math.random(), task: taskName, start: startTime, end: now, duration: duration, isAuto: isAutoLog }); this.save(); this.renderHistory(); }
             tick() { const now = Date.now(); if(this.state.isRunning && this.state.startTime) this.dom.mainDisplay.innerText = this.formatTime(now - this.state.startTime); if(this.state.isAuto && this.state.autoStart) this.dom.autoDisplay.innerText = this.formatTime(now - this.state.autoStart); else this.dom.autoDisplay.innerText = "00:00:00"; }
             
@@ -307,41 +342,45 @@
                 if (this.state.isAuto) { this.dom.lblAuto.innerText = "(ON)"; this.dom.autoBar.classList.add('auto-running'); } else { this.dom.lblAuto.innerText = "(Off)"; this.dom.autoBar.classList.remove('auto-running'); }
             }
 
-            // --- HISTORIAL & GRÁFICAS ---
+            // --- HISTORIAL ---
             renderHistory() {
                 const data = this.getFilteredData();
                 this.updateDateLabel();
                 this.dom.container.innerHTML = "";
+                if(data.length === 0) { this.dom.container.innerHTML = `<div style="text-align:center; padding:40px; color:#444">Sin actividad</div>`; return; }
 
-                if(data.length === 0) { this.dom.container.innerHTML = `<div style="text-align:center; padding:40px; color:#444">Sin actividad en este periodo</div>`; return; }
-
-                // 1. Gráfica
                 const chartCanvas = document.createElement('canvas');
-                const chartDiv = document.createElement('div');
-                chartDiv.className = 'chart-container';
-                chartDiv.appendChild(chartCanvas);
-                this.dom.container.appendChild(chartDiv);
-                this.renderChart(chartCanvas, data);
+                const chartDiv = document.createElement('div'); chartDiv.className = 'chart-container'; chartDiv.appendChild(chartCanvas); this.dom.container.appendChild(chartDiv); this.renderChart(chartCanvas, data);
 
-                // 2. Resumen
                 const summaryData = this.calculateSummary(data);
                 const sumBox = document.createElement('div'); sumBox.className = 'summary-box';
                 let sumHtml = `<div class="sum-title">TOTALES (${this.getFilterName()})</div>`;
-                summaryData.forEach(s => { sumHtml += `<div class="sum-row"><span class="sum-task ${s.task.includes('AUTOMATIZACIÓN') ? 'sum-auto' : ''}">${s.task}</span><span class="sum-time">${this.formatTime(s.total * 1000)} (${s.pct}%)</span></div>`; });
+                summaryData.forEach(s => { 
+                    // Detectar si es auto para colorear
+                    const isAuto = s.task === 'automatización' || s.task.includes('AUTOMATIZACIÓN');
+                    sumHtml += `<div class="sum-row"><span class="sum-task ${isAuto ? 'sum-auto' : ''}">${s.task}</span><span class="sum-time">${this.formatTime(s.total * 1000)} (${s.pct}%)</span></div>`; 
+                });
                 sumBox.innerHTML = sumHtml;
                 this.dom.container.appendChild(sumBox);
 
-                // 3. Detalle
                 const listDiv = document.createElement('div');
                 data.forEach(item => {
-                    const el = document.createElement('div'); el.className = `log-item ${item.isAuto ? 'log-auto' : ''}`;
+                    // Limpieza visual: si es antiguo (con emoji), mostrar limpio
+                    let displayTask = item.task.replace('⚡ ', '');
+                    const isAuto = item.isAuto || item.task.includes('utomatización');
+                    
+                    const el = document.createElement('div'); 
+                    el.className = `log-item ${isAuto ? 'log-auto-border' : ''}`;
                     const date = new Date(item.start);
-                    const day = date.toLocaleDateString(undefined, {day:'numeric', month:'short'});
                     const time = `${date.getHours()}:${date.getMinutes().toString().padStart(2,'0')}`;
+                    
                     el.innerHTML = `
-                        <div class="log-info"><span class="log-task" style="${item.isAuto ? 'color:var(--c-auto)' : ''}">${item.task}</span><span class="log-meta">${day} • ${time}</span></div>
+                        <div class="log-info">
+                            <span class="log-task ${isAuto ? 'text-automation' : ''}">${displayTask}</span>
+                            <span class="log-meta">${date.toLocaleDateString(undefined, {day:'numeric', month:'short'})} • ${time}</span>
+                        </div>
                         <div style="display:flex; align-items:center;">
-                            <span style="font-family:monospace; color:${item.isAuto ? 'var(--c-auto)' : 'var(--btn-start)'}">${this.formatTime(item.duration * 1000)}</span>
+                            <span style="font-family:monospace; color:${isAuto ? 'var(--c-auto)' : 'var(--btn-start)'}">${this.formatTime(item.duration * 1000)}</span>
                             <button class="btn-icon" onclick="app.editItem(${item.id})">✏️</button>
                             <button class="btn-icon" style="color:var(--danger)" onclick="app.deleteItem(${item.id})">🗑</button>
                         </div>
@@ -355,20 +394,17 @@
                 const summary = this.calculateSummary(data);
                 const labels = summary.map(s => s.task);
                 const values = summary.map(s => s.total);
-                const colors = summary.map(s => CHART_COLORS[s.task] || '#888');
+                // Si no tiene color definido (es custom), usar gris
+                const colors = summary.map(s => {
+                    let key = s.task;
+                    if(key === 'automatización' || key.includes('AUTOMATIZACIÓN')) return CHART_COLORS['automatización'];
+                    return CHART_COLORS[key] || '#D3D3D3';
+                });
 
                 if(this.chartInstance) this.chartInstance.destroy();
-
                 this.chartInstance = new Chart(canvas, {
-                    type: 'doughnut',
-                    data: {
-                        labels: labels,
-                        datasets: [{ data: values, backgroundColor: colors, borderWidth: 0 }]
-                    },
-                    options: {
-                        responsive: true, maintainAspectRatio: false,
-                        plugins: { legend: { display: false } }
-                    }
+                    type: 'doughnut', data: { labels: labels, datasets: [{ data: values, backgroundColor: colors, borderWidth: 0 }] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
                 });
             }
 
@@ -382,108 +418,102 @@
                 this.dom.lblCurrentDate.innerText = txt;
             }
 
-            // --- EDICIÓN ---
+            // --- EXPORTACIÓN ---
+            openExportModal(type) {
+                this.exportTypePending = type;
+                // Pre-rellenar fechas con el filtro actual
+                const range = this.getRangeTimes();
+                const toInput = (ts) => new Date(ts).toISOString().split('T')[0];
+                document.getElementById('expStart').value = toInput(range.start);
+                document.getElementById('expEnd').value = toInput(range.end - 1);
+                document.getElementById('exportModal').style.display = 'flex';
+            }
+
+            exportCurrent() {
+                const data = this.getFilteredData();
+                this.doExport(data, this.exportTypePending, this.getFilterName());
+                document.getElementById('exportModal').style.display = 'none';
+            }
+
+            exportRange() {
+                const s = new Date(document.getElementById('expStart').value).getTime();
+                const e = new Date(document.getElementById('expEnd').value).getTime() + 86400000; // Final del día
+                const data = this.state.history.filter(i => i.start >= s && i.start < e);
+                this.doExport(data, this.exportTypePending, "Personalizado");
+                document.getElementById('exportModal').style.display = 'none';
+            }
+
+            doExport(data, type, periodName) {
+                if(data.length === 0) return alert("Sin datos");
+                const summary = this.calculateSummary(data);
+                if (type === 'csv') {
+                    let csv = `REPORTE ${periodName.toUpperCase()}\n\nRESUMEN\nTarea,Tiempo\n`;
+                    summary.forEach(s => csv += `${s.task},${this.formatTime(s.total*1000)}\n`);
+                    csv += `\nDETALLE\nFecha,Hora,Tarea,Duracion\n`;
+                    data.forEach(d => csv += `${new Date(d.start).toLocaleDateString()},${new Date(d.start).toLocaleTimeString()},${d.task},${this.formatTime(d.duration*1000)}\n`);
+                    this.download(csv, `Rata_${periodName}.csv`, 'text/csv');
+                } else {
+                    const doc = new jsPDF();
+                    doc.setFontSize(16); doc.text(`Rata Tracker - ${periodName}`, 14, 20);
+                    doc.autoTable({ startY: 30, head: [['Tarea', 'Total', '%']], body: summary.map(s => [s.task, this.formatTime(s.total*1000), s.pct+'%']) });
+                    doc.autoTable({ startY: doc.lastAutoTable.finalY + 10, head: [['Fecha', 'Tarea', 'Duración']], body: data.map(d => [new Date(d.start).toLocaleString(), d.task, this.formatTime(d.duration*1000)]) });
+                    doc.save(`Rata_${periodName}.pdf`);
+                }
+            }
+
+            // --- UTILS ---
+            getRangeTimes() {
+                const cursor = new Date(this.state.currentDate);
+                const mode = this.state.filterMode;
+                let start, end;
+                if (mode === 'day') { start = new Date(cursor.getFullYear(), cursor.getMonth(), cursor.getDate()).getTime(); end = start + 86400000; }
+                else if (mode === 'week') { const day = cursor.getDay() || 7; start = new Date(cursor.getFullYear(), cursor.getMonth(), cursor.getDate() - day + 1).getTime(); end = start + (86400000 * 7); }
+                else if (mode === 'month') { start = new Date(cursor.getFullYear(), cursor.getMonth(), 1).getTime(); end = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1).getTime(); }
+                else if (mode === 'year') { start = new Date(cursor.getFullYear(), 0, 1).getTime(); end = new Date(cursor.getFullYear() + 1, 0, 1).getTime(); }
+                return { start, end };
+            }
+            getFilteredData() { const r = this.getRangeTimes(); return this.state.history.filter(i => i.start >= r.start && i.start < r.end); }
+            calculateSummary(data) { const map = {}; let t=0; data.forEach(d => { if(!map[d.task]) map[d.task]=0; map[d.task]+=d.duration; t+=d.duration; }); return Object.keys(map).map(k => ({ task: k, total: map[k], pct: t>0?((map[k]/t)*100).toFixed(1):0 })).sort((a,b) => b.total - a.total); }
+            
+            // ... (Resto de funciones: editItem, saveEdit, delete, clear, backup, restore, download, formatTime, save, load se mantienen igual que V12)
             editItem(id) {
                 const item = this.state.history.find(i => i.id === id);
                 if(!item) return;
-
                 document.getElementById('editId').value = id;
                 document.getElementById('editTaskName').value = item.task;
-                
-                // Formato para input datetime-local (YYYY-MM-DDTHH:MM)
-                const toLocalISO = (ts) => {
-                    const d = new Date(ts);
-                    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-                    return d.toISOString().slice(0,16);
-                };
-
+                const toLocalISO = (ts) => { const d = new Date(ts); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0,16); };
                 document.getElementById('editStart').value = toLocalISO(item.start);
                 document.getElementById('editEnd').value = toLocalISO(item.end);
                 document.getElementById('editModal').style.display = 'flex';
             }
-
             saveEdit() {
                 const id = parseFloat(document.getElementById('editId').value);
                 const newStart = new Date(document.getElementById('editStart').value).getTime();
                 const newEnd = new Date(document.getElementById('editEnd').value).getTime();
-
-                if(newEnd <= newStart) return alert("La hora de fin debe ser posterior al inicio");
-
+                if(newEnd <= newStart) return alert("Error en fechas");
                 const itemIndex = this.state.history.findIndex(i => i.id === id);
                 if(itemIndex > -1) {
                     this.state.history[itemIndex].start = newStart;
                     this.state.history[itemIndex].end = newEnd;
                     this.state.history[itemIndex].duration = Math.floor((newEnd - newStart)/1000);
-                    this.save();
-                    this.renderHistory();
+                    this.save(); this.renderHistory();
                     document.getElementById('editModal').style.display = 'none';
                 }
             }
-
-            // --- UTILS DATOS ---
-            getFilteredData() {
-                const cursor = new Date(this.state.currentDate);
-                const mode = this.state.filterMode;
-                let start, end;
-
-                if (mode === 'day') {
-                    start = new Date(cursor.getFullYear(), cursor.getMonth(), cursor.getDate()).getTime();
-                    end = start + 86400000;
-                } else if (mode === 'week') {
-                    const day = cursor.getDay() || 7; 
-                    start = new Date(cursor.getFullYear(), cursor.getMonth(), cursor.getDate() - day + 1).getTime();
-                    end = start + (86400000 * 7);
-                } else if (mode === 'month') {
-                    start = new Date(cursor.getFullYear(), cursor.getMonth(), 1).getTime();
-                    end = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1).getTime();
-                } else if (mode === 'year') {
-                    start = new Date(cursor.getFullYear(), 0, 1).getTime();
-                    end = new Date(cursor.getFullYear() + 1, 0, 1).getTime();
-                }
-
-                return this.state.history.filter(i => i.start >= start && i.start < end);
-            }
-
-            calculateSummary(data) {
-                const map = {};
-                let totalPeriod = 0;
-                data.forEach(d => {
-                    if (!map[d.task]) map[d.task] = 0;
-                    map[d.task] += d.duration;
-                    totalPeriod += d.duration;
-                });
-                return Object.keys(map).map(k => ({ 
-                    task: k, total: map[k], 
-                    pct: totalPeriod > 0 ? ((map[k]/totalPeriod)*100).toFixed(1) : 0
-                })).sort((a,b) => b.total - a.total);
-            }
-
             setFilter(mode, el) { this.state.filterMode = mode; document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); el.classList.add('active'); this.renderHistory(); }
             getFilterName() { return {'day':'Diario', 'week':'Semanal', 'month':'Mensual', 'year':'Anual'}[this.state.filterMode]; }
             deleteItem(id) { if(confirm("¿Eliminar?")) { this.state.history = this.state.history.filter(i => i.id !== id); this.save(); this.renderHistory(); } }
             clearAll() { if(confirm("¿BORRAR TODO?")) { this.state.history = []; this.save(); location.reload(); } }
-            
-            // EXPORT / BACKUP (Mismo código de V11)
-            export(type) { const data = this.getFilteredData(); if(data.length === 0) return alert("Sin datos"); const summary = this.calculateSummary(data); const period = this.getFilterName(); if (type === 'csv') { let csv = `REPORTE ${period.toUpperCase()}\n\nRESUMEN AGRUPADO\nTarea,Tiempo Total\n`; summary.forEach(s => csv += `${s.task},${this.formatTime(s.total*1000)}\n`); csv += `\nDETALLE CRONOLOGICO\nFecha,Hora,Tarea,Duracion\n`; data.forEach(d => csv += `${new Date(d.start).toLocaleDateString()},${new Date(d.start).toLocaleTimeString()},${d.task},${this.formatTime(d.duration*1000)}\n`); this.download(csv, `RataTracker_${period}.csv`, 'text/csv'); } else if (type === 'pdf') { const doc = new jsPDF(); doc.setFontSize(16); doc.text(`Rata Tracker - ${period}`, 14, 20); doc.setFontSize(10); doc.text(`Generado: ${new Date().toLocaleString()}`, 14, 28); doc.text("RESUMEN TOTALIZADO", 14, 40); doc.autoTable({ startY: 45, head: [['Tarea', 'Total', '%']], body: summary.map(s => [s.task, this.formatTime(s.total*1000), s.pct+'%']), theme: 'grid', headStyles: { fillColor: [40, 40, 40] } }); doc.text("DETALLE DE REGISTROS", 14, doc.lastAutoTable.finalY + 15); doc.autoTable({ startY: doc.lastAutoTable.finalY + 20, head: [['Hora', 'Tarea', 'Duración']], body: data.map(d => [new Date(d.start).toLocaleTimeString(), d.task, this.formatTime(d.duration*1000)]), theme: 'striped', styles: { fontSize: 9 } }); doc.save(`RataTracker_${period}.pdf`); } }
             backup() { const data = JSON.stringify(this.state); const date = new Date().toISOString().slice(0,10); this.download(data, `RataBackup_${date}.json`, 'application/json'); }
             triggerRestore() { if(confirm("⚠ PRECAUCIÓN: Al restaurar se sobrescribirán los datos actuales. ¿Deseas continuar?")) { document.getElementById('fileInput').click(); } }
             importData(input) { const file = input.files[0]; if(!file) return; const reader = new FileReader(); reader.onload = (e) => { try { const importedData = JSON.parse(e.target.result); if(importedData.history && Array.isArray(importedData.history)) { this.state = importedData; this.save(); alert("✅ Datos restaurados con éxito."); location.reload(); } else { alert("❌ Archivo de copia no válido."); } } catch(err) { alert("❌ Error al leer el archivo."); } }; reader.readAsText(file); }
             download(content, name, mime) { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([content], {type:mime})); a.download = name; a.click(); }
             formatTime(ms) { const s = Math.floor(ms / 1000); return new Date(s * 1000).toISOString().substr(11, 8); }
-            
-            save() { localStorage.setItem('rata_v12', JSON.stringify(this.state)); }
-            load() { 
-                const s = localStorage.getItem('rata_v12'); 
-                if(!s) { 
-                    const v11 = localStorage.getItem('rata_v11'); 
-                    if(v11) { this.state = JSON.parse(v11); this.save(); }
-                } else { 
-                    this.state = JSON.parse(s); 
-                } 
-            }
+            save() { localStorage.setItem('rata_v13', JSON.stringify(this.state)); }
+            load() { const s = localStorage.getItem('rata_v13'); if(!s) { const v12 = localStorage.getItem('rata_v12'); if(v12) { this.state = JSON.parse(v12); this.save(); } } else { this.state = JSON.parse(s); } }
         }
 
-        const app = new RataTrackerV12();
+        const app = new RataTrackerV13();
     </script>
 </body>
 </html>
