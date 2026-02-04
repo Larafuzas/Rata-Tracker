@@ -11,7 +11,7 @@
     <link rel="manifest" href="./manifest.json">
     <link rel="apple-touch-icon" href="./icon.png">
 
-    <title>Rata Tracker V13</title>
+    <title>Rata Tracker V14</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -25,9 +25,10 @@
             /* Paleta Pastel */
             --c-rata: #FFB7B2; --c-segregar: #FFDAC1; --c-escaner: #E2F0CB; --c-voluminoso: #B5EAD7;
             --c-alimentacion: #C7CEEA; --c-rampas: #E0BBE4; --c-top: #F3E5AB; 
-            --c-hoffmann: #F6EAC2; /* Nuevo color Hoffmann */
+            --c-hoffmann: #F6EAC2; 
+            --c-descanso: #A7C7E7; /* Azul Pastel Relax */
             --c-otros: #D3D3D3;
-            --c-auto: #FFA500; /* Naranja para texto auto */
+            --c-auto: #FFA500; 
             /* UI */
             --btn-start: #B5EAD7; --btn-stop: #FFB7B2; --danger: #ff5f56;
             --active-tracker: #B5EAD7; --active-history: #E0BBE4;
@@ -55,7 +56,7 @@
         
         .t-rata { background: var(--c-rata); } .t-segregar { background: var(--c-segregar); } .t-escaner { background: var(--c-escaner); } .t-voluminoso { background: var(--c-voluminoso); }
         .t-alimentacion { background: var(--c-alimentacion); } .t-rampas { background: var(--c-rampas); } .t-top { background: var(--c-top); } 
-        .t-hoffmann { background: var(--c-hoffmann); } .t-otros { background: var(--c-otros); }
+        .t-hoffmann { background: var(--c-hoffmann); } .t-descanso { background: var(--c-descanso); } .t-otros { background: var(--c-otros); }
 
         /* CONTROLES */
         .controls { display: flex; justify-content: center; gap: 40px; padding: 20px; background: linear-gradient(to top, var(--bg-color), transparent); }
@@ -83,8 +84,6 @@
         .sum-title { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; color: #aaa; margin-bottom: 12px; border-bottom: 1px solid #444; padding-bottom: 8px;}
         .sum-row { display: flex; justify-content: space-between; font-size: 1rem; margin-bottom: 8px; }
         .sum-task { color: #ddd; } 
-        
-        /* ESTILO NUEVO AUTOMATIZACIÓN EN TABLA */
         .sum-auto { color: var(--c-auto) !important; font-weight: bold; text-transform: lowercase; }
 
         .log-item { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; border-bottom: 1px solid #333; font-size: 0.9rem; }
@@ -92,8 +91,6 @@
         .log-info span { display: block; } 
         .log-task { font-weight: bold; color: #eee; margin-bottom: 4px; } 
         .log-meta { font-size: 0.8rem; color: #777; }
-        
-        /* ESTILO NUEVO AUTOMATIZACIÓN EN LISTA */
         .text-automation { color: var(--c-auto) !important; font-weight: bold; text-transform: lowercase; }
 
         .btn-icon { background: none; border: none; font-size: 1.2rem; padding: 5px; opacity: 0.5; cursor: pointer; margin-left: 8px;}
@@ -138,6 +135,7 @@
                 <button class="task-btn t-rampas" onclick="app.selectTask('Rampas')">Rampas</button>
                 <button class="task-btn t-top" onclick="app.selectTask('Top/Cosmos')">Top/Cosmos</button>
                 <button class="task-btn t-hoffmann" onclick="app.selectTask('Hoffmann')">Hoffmann</button>
+                <button class="task-btn t-descanso" onclick="app.selectTask('Descanso')">Descanso</button>
                 <button class="task-btn t-otros" onclick="app.promptOther()">Otros</button>
             </div>
         </div>
@@ -246,14 +244,14 @@
 
         const { jsPDF } = window.jspdf;
 
-        // Colores Chart.js (incluido Hoffmann)
+        // Colores Chart.js 
         const CHART_COLORS = {
             'Rata': '#FFB7B2', 'Segregar': '#FFDAC1', 'Escáner': '#E2F0CB', 'Voluminoso': '#B5EAD7',
             'Alimentación': '#C7CEEA', 'Rampas': '#E0BBE4', 'Top/Cosmos': '#F3E5AB', 'Hoffmann': '#F6EAC2', 
-            'Otros': '#D3D3D3', 'automatización': '#FFA500'
+            'Descanso': '#A7C7E7', 'Otros': '#D3D3D3', 'automatización': '#FFA500'
         };
 
-        class RataTrackerV13 {
+        class RataTrackerV14 {
             constructor() {
                 this.state = { 
                     task: null, isRunning: false, startTime: null, 
@@ -304,7 +302,6 @@
                 this.render();
             }
 
-            // Manejo de "Otros"
             promptOther() {
                 document.getElementById('otherInput').value = "";
                 document.getElementById('otherModal').style.display = 'flex';
@@ -313,19 +310,23 @@
 
             confirmOther() {
                 const name = document.getElementById('otherInput').value.trim();
-                if(name) {
-                    this.selectTask(name); // Inicia la tarea con el nombre personalizado
-                }
+                if(name) { this.selectTask(name); }
                 document.getElementById('otherModal').style.display = 'none';
             }
 
             start() { if(!this.state.task || this.state.isRunning) return; this.state.isRunning = true; this.state.startTime = Date.now(); this.save(); this.checkAutoLogic(this.state.task); this.render(); }
             stop() { if(!this.state.isRunning) return; this.saveSession(this.state.task, this.state.startTime); this.state.isRunning = false; this.state.startTime = null; if(this.state.isAuto) this.toggleAuto(); this.save(); this.render(); }
-            checkAutoLogic(newTaskName) { const isNextAuto = this.autoTriggers.includes(newTaskName); if (isNextAuto && !this.state.isAuto) this.toggleAuto(); else if (!isNextAuto && this.state.isAuto) this.toggleAuto(); }
+            
+            checkAutoLogic(newTaskName) { 
+                const isNextAuto = this.autoTriggers.includes(newTaskName); 
+                // Start Auto
+                if (isNextAuto && !this.state.isAuto) this.toggleAuto(); 
+                // Stop Auto (si cambias a tarea sin auto, incluyendo Descanso)
+                else if (!isNextAuto && this.state.isAuto) this.toggleAuto(); 
+            }
             
             toggleAuto() { 
                 if(this.state.isAuto) { 
-                    // GUARDAR COMO "automatización" (minúscula, sin emoji)
                     this.saveSession("automatización", this.state.autoStart, true); 
                     this.state.isAuto = false; this.state.autoStart = null; 
                 } else { 
@@ -356,7 +357,6 @@
                 const sumBox = document.createElement('div'); sumBox.className = 'summary-box';
                 let sumHtml = `<div class="sum-title">TOTALES (${this.getFilterName()})</div>`;
                 summaryData.forEach(s => { 
-                    // Detectar si es auto para colorear
                     const isAuto = s.task === 'automatización' || s.task.includes('AUTOMATIZACIÓN');
                     sumHtml += `<div class="sum-row"><span class="sum-task ${isAuto ? 'sum-auto' : ''}">${s.task}</span><span class="sum-time">${this.formatTime(s.total * 1000)} (${s.pct}%)</span></div>`; 
                 });
@@ -365,7 +365,6 @@
 
                 const listDiv = document.createElement('div');
                 data.forEach(item => {
-                    // Limpieza visual: si es antiguo (con emoji), mostrar limpio
                     let displayTask = item.task.replace('⚡ ', '');
                     const isAuto = item.isAuto || item.task.includes('utomatización');
                     
@@ -394,7 +393,6 @@
                 const summary = this.calculateSummary(data);
                 const labels = summary.map(s => s.task);
                 const values = summary.map(s => s.total);
-                // Si no tiene color definido (es custom), usar gris
                 const colors = summary.map(s => {
                     let key = s.task;
                     if(key === 'automatización' || key.includes('AUTOMATIZACIÓN')) return CHART_COLORS['automatización'];
@@ -421,7 +419,6 @@
             // --- EXPORTACIÓN ---
             openExportModal(type) {
                 this.exportTypePending = type;
-                // Pre-rellenar fechas con el filtro actual
                 const range = this.getRangeTimes();
                 const toInput = (ts) => new Date(ts).toISOString().split('T')[0];
                 document.getElementById('expStart').value = toInput(range.start);
@@ -437,7 +434,7 @@
 
             exportRange() {
                 const s = new Date(document.getElementById('expStart').value).getTime();
-                const e = new Date(document.getElementById('expEnd').value).getTime() + 86400000; // Final del día
+                const e = new Date(document.getElementById('expEnd').value).getTime() + 86400000; 
                 const data = this.state.history.filter(i => i.start >= s && i.start < e);
                 this.doExport(data, this.exportTypePending, "Personalizado");
                 document.getElementById('exportModal').style.display = 'none';
@@ -475,7 +472,6 @@
             getFilteredData() { const r = this.getRangeTimes(); return this.state.history.filter(i => i.start >= r.start && i.start < r.end); }
             calculateSummary(data) { const map = {}; let t=0; data.forEach(d => { if(!map[d.task]) map[d.task]=0; map[d.task]+=d.duration; t+=d.duration; }); return Object.keys(map).map(k => ({ task: k, total: map[k], pct: t>0?((map[k]/t)*100).toFixed(1):0 })).sort((a,b) => b.total - a.total); }
             
-            // ... (Resto de funciones: editItem, saveEdit, delete, clear, backup, restore, download, formatTime, save, load se mantienen igual que V12)
             editItem(id) {
                 const item = this.state.history.find(i => i.id === id);
                 if(!item) return;
@@ -509,11 +505,12 @@
             importData(input) { const file = input.files[0]; if(!file) return; const reader = new FileReader(); reader.onload = (e) => { try { const importedData = JSON.parse(e.target.result); if(importedData.history && Array.isArray(importedData.history)) { this.state = importedData; this.save(); alert("✅ Datos restaurados con éxito."); location.reload(); } else { alert("❌ Archivo de copia no válido."); } } catch(err) { alert("❌ Error al leer el archivo."); } }; reader.readAsText(file); }
             download(content, name, mime) { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([content], {type:mime})); a.download = name; a.click(); }
             formatTime(ms) { const s = Math.floor(ms / 1000); return new Date(s * 1000).toISOString().substr(11, 8); }
-            save() { localStorage.setItem('rata_v13', JSON.stringify(this.state)); }
-            load() { const s = localStorage.getItem('rata_v13'); if(!s) { const v12 = localStorage.getItem('rata_v12'); if(v12) { this.state = JSON.parse(v12); this.save(); } } else { this.state = JSON.parse(s); } }
+            
+            save() { localStorage.setItem('rata_v14', JSON.stringify(this.state)); }
+            load() { const s = localStorage.getItem('rata_v14'); if(!s) { const v13 = localStorage.getItem('rata_v13'); if(v13) { this.state = JSON.parse(v13); this.save(); } } else { this.state = JSON.parse(s); } }
         }
 
-        const app = new RataTrackerV13();
+        const app = new RataTrackerV14();
     </script>
 </body>
 </html>
