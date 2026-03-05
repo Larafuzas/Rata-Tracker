@@ -11,24 +11,21 @@
     <link rel="manifest" href="./manifest.json">
     <link rel="apple-touch-icon" href="./icon.png">
 
-    <title>Rata Tracker V14</title>
+    <title>Rata Tracker V15</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet">
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-    <style>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script> <style>
         :root {
             --bg-color: #121212; --surface: #1E1E1E; --surface-2: #2C2C2E; --nav-bg: #000000;
             --text-main: #E0E0E0; --text-muted: #888888;
             /* Paleta Pastel */
             --c-rata: #FFB7B2; --c-segregar: #FFDAC1; --c-escaner: #E2F0CB; --c-voluminoso: #B5EAD7;
             --c-alimentacion: #C7CEEA; --c-rampas: #E0BBE4; --c-top: #F3E5AB; 
-            --c-hoffmann: #F6EAC2; 
-            --c-descanso: #A7C7E7; /* Azul Pastel Relax */
-            --c-otros: #D3D3D3;
-            --c-auto: #FFA500; 
+            --c-hoffmann: #F6EAC2; --c-descanso: #A7C7E7; --c-otros: #D3D3D3; --c-auto: #FFA500; 
             /* UI */
             --btn-start: #B5EAD7; --btn-stop: #FFB7B2; --danger: #ff5f56;
             --active-tracker: #B5EAD7; --active-history: #E0BBE4;
@@ -63,34 +60,43 @@
         .c-btn { width: 75px; height: 75px; border-radius: 50%; border: none; font-weight: 900; color: #333; text-transform: uppercase; font-size: 0.9rem; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
         .c-start { background: var(--btn-start); } .c-stop { background: var(--btn-stop); }
         .disabled { opacity: 0.3; pointer-events: none; filter: grayscale(100%); }
-
         .auto-bar { background: #1a1a1a; border-top: 1px solid #333; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; color: #64D2FF; cursor: pointer; }
         .auto-running { color: #fff; text-shadow: 0 0 5px #64D2FF; }
 
         /* HISTORIAL */
         .history-full-container { flex: 1; display: flex; flex-direction: column; background: var(--surface); height: 100%; }
+        
+        /* CALENDARIO NAV */
         .date-nav { display: flex; justify-content: space-between; align-items: center; background: #222; padding: 10px 15px; color: #fff; border-bottom: 1px solid #333; }
         .date-nav button { background: none; border: none; color: var(--active-tracker); font-size: 1.5rem; cursor: pointer; padding: 0 10px; }
-        .date-display { font-size: 0.9rem; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
+        .date-display { font-size: 0.9rem; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; padding: 5px; }
+        .date-picker-wrapper { position: relative; display: inline-flex; align-items: center; justify-content: center; }
+        .hidden-date-input { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 10; }
 
         .tabs { display: flex; background: #000; padding: 5px; }
         .tab { flex: 1; padding: 10px; text-align: center; font-size: 0.8rem; color: #666; cursor: pointer; border-bottom: 2px solid transparent; }
         .tab.active { color: #fff; border-bottom: 2px solid var(--btn-start); font-weight: bold; }
-
         .history-content { flex: 1; overflow-y: auto; padding: 0; }
-        .chart-container { margin: 20px; padding: 15px; background: var(--surface-2); border-radius: 12px; border: 1px solid #333; height: 250px; display: flex; justify-content: center; }
-
+        
+        /* GRÁFICA */
+        .chart-container { margin: 20px; padding: 15px; background: var(--surface-2); border-radius: 12px; border: 1px solid #333; height: 260px; display: flex; justify-content: center; }
         .summary-box { background: var(--surface-2); margin: 0 20px 20px 20px; border-radius: 12px; padding: 20px; border: 1px solid #333; }
         .sum-title { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; color: #aaa; margin-bottom: 12px; border-bottom: 1px solid #444; padding-bottom: 8px;}
         .sum-row { display: flex; justify-content: space-between; font-size: 1rem; margin-bottom: 8px; }
         .sum-task { color: #ddd; } 
         .sum-auto { color: var(--c-auto) !important; font-weight: bold; text-transform: lowercase; }
 
+        /* DIARIO CSS */
+        .diary-section { margin: 0 20px 20px 20px; background: var(--surface-2); border-radius: 12px; padding: 15px; border: 1px solid #333; }
+        .diary-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .diary-title { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; color: #aaa; }
+        .diary-textarea { width: 100%; min-height: 80px; background: #000; border: 1px solid #444; color: #fff; border-radius: 8px; padding: 10px; font-family: inherit; font-size: 0.9rem; resize: vertical; outline:none; }
+        .diary-textarea:focus { border-color: var(--active-history); }
+
+        .detail-header { padding: 15px 20px 5px; font-size: 0.8rem; color: #666; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid #222; }
         .log-item { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; border-bottom: 1px solid #333; font-size: 0.9rem; }
         .log-auto-border { border-left: 4px solid var(--c-auto); background: rgba(255, 165, 0, 0.05); }
-        .log-info span { display: block; } 
-        .log-task { font-weight: bold; color: #eee; margin-bottom: 4px; } 
-        .log-meta { font-size: 0.8rem; color: #777; }
+        .log-info span { display: block; } .log-task { font-weight: bold; color: #eee; margin-bottom: 4px; } .log-meta { font-size: 0.8rem; color: #777; }
         .text-automation { color: var(--c-auto) !important; font-weight: bold; text-transform: lowercase; }
 
         .btn-icon { background: none; border: none; font-size: 1.2rem; padding: 5px; opacity: 0.5; cursor: pointer; margin-left: 8px;}
@@ -154,7 +160,10 @@
             <div style="background: #111; padding-top: 50px;">
                 <div class="date-nav">
                     <button onclick="app.changePeriod(-1)">&#9664;</button>
-                    <span id="lblCurrentDate" class="date-display">HOY</span>
+                    <div class="date-picker-wrapper">
+                        <span id="lblCurrentDate" class="date-display">HOY</span>
+                        <input type="date" id="nativeDatePicker" class="hidden-date-input" onchange="app.jumpToDate(this.value)">
+                    </div>
                     <button onclick="app.changePeriod(1)">&#9654;</button>
                 </div>
                 <div class="tabs">
@@ -238,6 +247,9 @@
     <input type="file" id="fileInput" style="display:none" onchange="app.importData(this)">
 
     <script>
+        // Registrar ChartDataLabels (El plugin para pintar los porcentajes)
+        Chart.register(ChartDataLabels);
+
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js').catch(console.log); });
         }
@@ -251,11 +263,12 @@
             'Descanso': '#A7C7E7', 'Otros': '#D3D3D3', 'automatización': '#FFA500'
         };
 
-        class RataTrackerV14 {
+        class RataTrackerV15 {
             constructor() {
                 this.state = { 
                     task: null, isRunning: false, startTime: null, 
                     isAuto: false, autoStart: null, history: [], 
+                    diaries: {}, // NUEVO: Diccionario para guardar el diario { "2026-03-05": "texto..." }
                     filterMode: 'day', currentDate: new Date().getTime() 
                 };
                 this.autoTriggers = ["Alimentación", "Rampas", "Top/Cosmos"];
@@ -287,6 +300,14 @@
                 this.renderHistory();
             }
 
+            // SALTO AL CALENDARIO DIRECTO
+            jumpToDate(val) {
+                if(!val) return;
+                const [y, m, d] = val.split('-');
+                this.state.currentDate = new Date(y, m-1, d).getTime();
+                this.renderHistory();
+            }
+
             // --- LÓGICA PRINCIPAL ---
             selectTask(name) {
                 document.querySelectorAll('.task-btn').forEach(b => { b.classList.remove('selected'); if(b.innerText === name) b.classList.add('selected'); });
@@ -302,36 +323,17 @@
                 this.render();
             }
 
-            promptOther() {
-                document.getElementById('otherInput').value = "";
-                document.getElementById('otherModal').style.display = 'flex';
-                document.getElementById('otherInput').focus();
-            }
-
-            confirmOther() {
-                const name = document.getElementById('otherInput').value.trim();
-                if(name) { this.selectTask(name); }
-                document.getElementById('otherModal').style.display = 'none';
-            }
+            promptOther() { document.getElementById('otherInput').value = ""; document.getElementById('otherModal').style.display = 'flex'; document.getElementById('otherInput').focus(); }
+            confirmOther() { const name = document.getElementById('otherInput').value.trim(); if(name) { this.selectTask(name); } document.getElementById('otherModal').style.display = 'none'; }
 
             start() { if(!this.state.task || this.state.isRunning) return; this.state.isRunning = true; this.state.startTime = Date.now(); this.save(); this.checkAutoLogic(this.state.task); this.render(); }
             stop() { if(!this.state.isRunning) return; this.saveSession(this.state.task, this.state.startTime); this.state.isRunning = false; this.state.startTime = null; if(this.state.isAuto) this.toggleAuto(); this.save(); this.render(); }
             
-            checkAutoLogic(newTaskName) { 
-                const isNextAuto = this.autoTriggers.includes(newTaskName); 
-                // Start Auto
-                if (isNextAuto && !this.state.isAuto) this.toggleAuto(); 
-                // Stop Auto (si cambias a tarea sin auto, incluyendo Descanso)
-                else if (!isNextAuto && this.state.isAuto) this.toggleAuto(); 
-            }
+            checkAutoLogic(newTaskName) { const isNextAuto = this.autoTriggers.includes(newTaskName); if (isNextAuto && !this.state.isAuto) this.toggleAuto(); else if (!isNextAuto && this.state.isAuto) this.toggleAuto(); }
             
             toggleAuto() { 
-                if(this.state.isAuto) { 
-                    this.saveSession("automatización", this.state.autoStart, true); 
-                    this.state.isAuto = false; this.state.autoStart = null; 
-                } else { 
-                    this.state.isAuto = true; this.state.autoStart = Date.now(); 
-                } 
+                if(this.state.isAuto) { this.saveSession("automatización", this.state.autoStart, true); this.state.isAuto = false; this.state.autoStart = null; } 
+                else { this.state.isAuto = true; this.state.autoStart = Date.now(); } 
                 this.save(); this.render(); 
             }
 
@@ -343,50 +345,105 @@
                 if (this.state.isAuto) { this.dom.lblAuto.innerText = "(ON)"; this.dom.autoBar.classList.add('auto-running'); } else { this.dom.lblAuto.innerText = "(Off)"; this.dom.autoBar.classList.remove('auto-running'); }
             }
 
+            // --- GENERADOR DE KEY PARA EL DIARIO ---
+            getCurrentPeriodKey() {
+                const d = new Date(this.state.currentDate);
+                const mode = this.state.filterMode;
+                if(mode === 'day') return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+                if(mode === 'month') return `${d.getFullYear()}-${d.getMonth()+1}`;
+                if(mode === 'year') return `${d.getFullYear()}`;
+                if(mode === 'week') {
+                    const day = d.getDay() || 7;
+                    const start = new Date(d.getFullYear(), d.getMonth(), d.getDate() - day + 1);
+                    return `W_${start.getFullYear()}-${start.getMonth()+1}-${start.getDate()}`;
+                }
+            }
+
+            saveDiary(text) {
+                const key = this.getCurrentPeriodKey();
+                if(!this.state.diaries) this.state.diaries = {};
+                this.state.diaries[key] = text;
+                this.save();
+            }
+
+            copyDiary() {
+                const key = this.getCurrentPeriodKey();
+                const text = (this.state.diaries && this.state.diaries[key]) ? this.state.diaries[key] : "";
+                if(!text.trim()) return alert("El diario de este periodo está vacío.");
+                navigator.clipboard.writeText(text).then(() => alert("✅ Diario copiado al portapapeles"));
+            }
+
             // --- HISTORIAL ---
             renderHistory() {
                 const data = this.getFilteredData();
                 this.updateDateLabel();
                 this.dom.container.innerHTML = "";
-                if(data.length === 0) { this.dom.container.innerHTML = `<div style="text-align:center; padding:40px; color:#444">Sin actividad</div>`; return; }
 
-                const chartCanvas = document.createElement('canvas');
-                const chartDiv = document.createElement('div'); chartDiv.className = 'chart-container'; chartDiv.appendChild(chartCanvas); this.dom.container.appendChild(chartDiv); this.renderChart(chartCanvas, data);
+                // Siempre mostramos el diario en el periodo correspondiente, haya o no haya datos de timer.
+                const hasData = data.length > 0;
 
-                const summaryData = this.calculateSummary(data);
-                const sumBox = document.createElement('div'); sumBox.className = 'summary-box';
-                let sumHtml = `<div class="sum-title">TOTALES (${this.getFilterName()})</div>`;
-                summaryData.forEach(s => { 
-                    const isAuto = s.task === 'automatización' || s.task.includes('AUTOMATIZACIÓN');
-                    sumHtml += `<div class="sum-row"><span class="sum-task ${isAuto ? 'sum-auto' : ''}">${s.task}</span><span class="sum-time">${this.formatTime(s.total * 1000)} (${s.pct}%)</span></div>`; 
-                });
-                sumBox.innerHTML = sumHtml;
-                this.dom.container.appendChild(sumBox);
+                // 1. Gráfica y Resumen (Si hay datos)
+                if (hasData) {
+                    const chartCanvas = document.createElement('canvas');
+                    const chartDiv = document.createElement('div'); chartDiv.className = 'chart-container'; chartDiv.appendChild(chartCanvas); this.dom.container.appendChild(chartDiv); this.renderChart(chartCanvas, data);
 
-                const listDiv = document.createElement('div');
-                data.forEach(item => {
-                    let displayTask = item.task.replace('⚡ ', '');
-                    const isAuto = item.isAuto || item.task.includes('utomatización');
+                    const summaryData = this.calculateSummary(data);
+                    const sumBox = document.createElement('div'); sumBox.className = 'summary-box';
+                    let sumHtml = `<div class="sum-title">TOTALES (${this.getFilterName()})</div>`;
+                    summaryData.forEach(s => { 
+                        const isAuto = s.task === 'automatización' || s.task.includes('AUTOMATIZACIÓN');
+                        sumHtml += `<div class="sum-row"><span class="sum-task ${isAuto ? 'sum-auto' : ''}">${s.task}</span><span class="sum-time">${this.formatTime(s.total * 1000)} (${s.pct}%)</span></div>`; 
+                    });
+                    sumBox.innerHTML = sumHtml;
+                    this.dom.container.appendChild(sumBox);
+                } else {
+                    this.dom.container.innerHTML += `<div style="text-align:center; padding:30px 20px 10px; color:#444">Sin actividad de tiempo en este periodo</div>`;
+                }
+
+                // 2. CAJÓN DEL DIARIO (Nuevo)
+                const diaryBox = document.createElement('div');
+                diaryBox.className = 'diary-section';
+                const key = this.getCurrentPeriodKey();
+                const currentText = (this.state.diaries && this.state.diaries[key]) ? this.state.diaries[key] : "";
+                
+                diaryBox.innerHTML = `
+                    <div class="diary-header">
+                        <span class="diary-title">📓 Diario de notas</span>
+                        <button class="act-btn btn-csv" style="padding: 6px 12px; width:auto; flex:none; background:#333; color:#fff;" onclick="app.copyDiary()">Copiar</button>
+                    </div>
+                    <textarea id="diaryInput" class="diary-textarea" placeholder="Escribe aquí las notas, ocurrencias o comentarios de este periodo..." oninput="app.saveDiary(this.value)">${currentText}</textarea>
+                `;
+                this.dom.container.appendChild(diaryBox);
+
+                // 3. Lista Detallada (Si hay datos)
+                if (hasData) {
+                    const header = document.createElement('div'); header.className = 'detail-header'; header.innerText = 'Detalle de registros'; this.dom.container.appendChild(header);
                     
-                    const el = document.createElement('div'); 
-                    el.className = `log-item ${isAuto ? 'log-auto-border' : ''}`;
-                    const date = new Date(item.start);
-                    const time = `${date.getHours()}:${date.getMinutes().toString().padStart(2,'0')}`;
-                    
-                    el.innerHTML = `
-                        <div class="log-info">
-                            <span class="log-task ${isAuto ? 'text-automation' : ''}">${displayTask}</span>
-                            <span class="log-meta">${date.toLocaleDateString(undefined, {day:'numeric', month:'short'})} • ${time}</span>
-                        </div>
-                        <div style="display:flex; align-items:center;">
-                            <span style="font-family:monospace; color:${isAuto ? 'var(--c-auto)' : 'var(--btn-start)'}">${this.formatTime(item.duration * 1000)}</span>
-                            <button class="btn-icon" onclick="app.editItem(${item.id})">✏️</button>
-                            <button class="btn-icon" style="color:var(--danger)" onclick="app.deleteItem(${item.id})">🗑</button>
-                        </div>
-                    `;
-                    listDiv.appendChild(el);
-                });
-                this.dom.container.appendChild(listDiv);
+                    const listDiv = document.createElement('div');
+                    data.forEach(item => {
+                        let displayTask = item.task.replace('⚡ ', '');
+                        const isAuto = item.isAuto || item.task.includes('utomatización');
+                        
+                        const el = document.createElement('div'); 
+                        el.className = `log-item ${isAuto ? 'log-auto-border' : ''}`;
+                        const date = new Date(item.start);
+                        const time = `${date.getHours()}:${date.getMinutes().toString().padStart(2,'0')}`;
+                        
+                        el.innerHTML = `
+                            <div class="log-info">
+                                <span class="log-task ${isAuto ? 'text-automation' : ''}">${displayTask}</span>
+                                <span class="log-meta">${date.toLocaleDateString(undefined, {day:'numeric', month:'short'})} • ${time}</span>
+                            </div>
+                            <div style="display:flex; align-items:center;">
+                                <span style="font-family:monospace; color:${isAuto ? 'var(--c-auto)' : 'var(--btn-start)'}">${this.formatTime(item.duration * 1000)}</span>
+                                <button class="btn-icon" onclick="app.editItem(${item.id})">✏️</button>
+                                <button class="btn-icon" style="color:var(--danger)" onclick="app.deleteItem(${item.id})">🗑</button>
+                            </div>
+                        `;
+                        listDiv.appendChild(el);
+                    });
+                    this.dom.container.appendChild(listDiv);
+                }
             }
 
             renderChart(canvas, data) {
@@ -401,8 +458,27 @@
 
                 if(this.chartInstance) this.chartInstance.destroy();
                 this.chartInstance = new Chart(canvas, {
-                    type: 'doughnut', data: { labels: labels, datasets: [{ data: values, backgroundColor: colors, borderWidth: 0 }] },
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                    type: 'doughnut', 
+                    data: { labels: labels, datasets: [{ data: values, backgroundColor: colors, borderWidth: 0 }] },
+                    options: { 
+                        responsive: true, maintainAspectRatio: false, 
+                        plugins: { 
+                            legend: { display: false },
+                            // CONFIGURACIÓN DE LOS PORCENTAJES SOBRE LA TARTA
+                            datalabels: {
+                                color: '#000',
+                                font: { weight: 'bold', size: 11 },
+                                formatter: (value, ctx) => {
+                                    let sum = 0;
+                                    ctx.chart.data.datasets[0].data.forEach(d => sum += d);
+                                    if(sum === 0) return '';
+                                    let pct = (value * 100 / sum);
+                                    // Solo muestra texto si el trozo es mayor al 5% para que no se amontone
+                                    return pct > 5 ? pct.toFixed(0) + '%' : '';
+                                }
+                            }
+                        } 
+                    }
                 });
             }
 
@@ -414,9 +490,11 @@
                 else if(this.state.filterMode === 'month') txt = d.toLocaleDateString(undefined, {month:'long', year:'numeric'});
                 else txt = d.getFullYear();
                 this.dom.lblCurrentDate.innerText = txt;
+                // Actualizar el valor del input hidden para que coincida con el día actual por si lo tocan
+                document.getElementById('nativeDatePicker').value = d.toISOString().split('T')[0];
             }
 
-            // --- EXPORTACIÓN ---
+            // --- EXPORTACIÓN Y EDICIÓN (Sin tocar el diario) ---
             openExportModal(type) {
                 this.exportTypePending = type;
                 const range = this.getRangeTimes();
@@ -441,7 +519,7 @@
             }
 
             doExport(data, type, periodName) {
-                if(data.length === 0) return alert("Sin datos");
+                if(data.length === 0) return alert("Sin datos de tiempo para exportar");
                 const summary = this.calculateSummary(data);
                 if (type === 'csv') {
                     let csv = `REPORTE ${periodName.toUpperCase()}\n\nRESUMEN\nTarea,Tiempo\n`;
@@ -458,7 +536,6 @@
                 }
             }
 
-            // --- UTILS ---
             getRangeTimes() {
                 const cursor = new Date(this.state.currentDate);
                 const mode = this.state.filterMode;
@@ -498,19 +575,49 @@
             }
             setFilter(mode, el) { this.state.filterMode = mode; document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); el.classList.add('active'); this.renderHistory(); }
             getFilterName() { return {'day':'Diario', 'week':'Semanal', 'month':'Mensual', 'year':'Anual'}[this.state.filterMode]; }
-            deleteItem(id) { if(confirm("¿Eliminar?")) { this.state.history = this.state.history.filter(i => i.id !== id); this.save(); this.renderHistory(); } }
-            clearAll() { if(confirm("¿BORRAR TODO?")) { this.state.history = []; this.save(); location.reload(); } }
+            deleteItem(id) { if(confirm("¿Eliminar registro de tiempo?")) { this.state.history = this.state.history.filter(i => i.id !== id); this.save(); this.renderHistory(); } }
+            clearAll() { if(confirm("¿BORRAR TODO EL HISTORIAL Y LOS DIARIOS?")) { this.state.history = []; this.state.diaries = {}; this.save(); location.reload(); } }
+            
+            // BACKUP Y RESTAURACIÓN RETROCOMPATIBLE
             backup() { const data = JSON.stringify(this.state); const date = new Date().toISOString().slice(0,10); this.download(data, `RataBackup_${date}.json`, 'application/json'); }
-            triggerRestore() { if(confirm("⚠ PRECAUCIÓN: Al restaurar se sobrescribirán los datos actuales. ¿Deseas continuar?")) { document.getElementById('fileInput').click(); } }
-            importData(input) { const file = input.files[0]; if(!file) return; const reader = new FileReader(); reader.onload = (e) => { try { const importedData = JSON.parse(e.target.result); if(importedData.history && Array.isArray(importedData.history)) { this.state = importedData; this.save(); alert("✅ Datos restaurados con éxito."); location.reload(); } else { alert("❌ Archivo de copia no válido."); } } catch(err) { alert("❌ Error al leer el archivo."); } }; reader.readAsText(file); }
+            triggerRestore() { if(confirm("⚠ PRECAUCIÓN: Al restaurar se sobrescribirán los datos actuales. ¿Continuar?")) { document.getElementById('fileInput').click(); } }
+            importData(input) { 
+                const file = input.files[0]; if(!file) return; const reader = new FileReader(); 
+                reader.onload = (e) => { 
+                    try { 
+                        const importedData = JSON.parse(e.target.result); 
+                        if(importedData.history && Array.isArray(importedData.history)) { 
+                            this.state = importedData; 
+                            // Compatibilidad con backups antiguos de la V14 o inferiores
+                            if(!this.state.diaries) this.state.diaries = {}; 
+                            this.save(); 
+                            alert("✅ Datos restaurados con éxito."); location.reload(); 
+                        } else { alert("❌ Archivo de copia no válido."); } 
+                    } catch(err) { alert("❌ Error al leer el archivo."); } 
+                }; 
+                reader.readAsText(file); 
+            }
             download(content, name, mime) { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([content], {type:mime})); a.download = name; a.click(); }
             formatTime(ms) { const s = Math.floor(ms / 1000); return new Date(s * 1000).toISOString().substr(11, 8); }
             
-            save() { localStorage.setItem('rata_v14', JSON.stringify(this.state)); }
-            load() { const s = localStorage.getItem('rata_v14'); if(!s) { const v13 = localStorage.getItem('rata_v13'); if(v13) { this.state = JSON.parse(v13); this.save(); } } else { this.state = JSON.parse(s); } }
+            save() { localStorage.setItem('rata_v15', JSON.stringify(this.state)); }
+            load() { 
+                const s = localStorage.getItem('rata_v15'); 
+                if(!s) { 
+                    const old = localStorage.getItem('rata_v14') || localStorage.getItem('rata_v13'); 
+                    if(old) { 
+                        this.state = JSON.parse(old); 
+                        if(!this.state.diaries) this.state.diaries = {}; 
+                        this.save(); 
+                    } 
+                } else { 
+                    this.state = JSON.parse(s); 
+                    if(!this.state.diaries) this.state.diaries = {}; 
+                } 
+            }
         }
 
-        const app = new RataTrackerV14();
+        const app = new RataTrackerV15();
     </script>
 </body>
 </html>
