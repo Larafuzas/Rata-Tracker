@@ -11,14 +11,16 @@
     <link rel="manifest" href="./manifest.json">
     <link rel="apple-touch-icon" href="./icon.png">
 
-    <title>Rata Tracker V15</title>
+    <title>Rata Tracker V16</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet">
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script> <style>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+
+    <style>
         :root {
             --bg-color: #121212; --surface: #1E1E1E; --surface-2: #2C2C2E; --nav-bg: #000000;
             --text-main: #E0E0E0; --text-muted: #888888;
@@ -86,12 +88,17 @@
         .sum-task { color: #ddd; } 
         .sum-auto { color: var(--c-auto) !important; font-weight: bold; text-transform: lowercase; }
 
-        /* DIARIO CSS */
-        .diary-section { margin: 0 20px 20px 20px; background: var(--surface-2); border-radius: 12px; padding: 15px; border: 1px solid #333; }
-        .diary-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .diary-title { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; color: #aaa; }
-        .diary-textarea { width: 100%; min-height: 80px; background: #000; border: 1px solid #444; color: #fff; border-radius: 8px; padding: 10px; font-family: inherit; font-size: 0.9rem; resize: vertical; outline:none; }
+        /* DIARIO ACORDEÓN CSS */
+        .diary-section { margin: 0 20px 20px 20px; background: var(--surface-2); border-radius: 12px; border: 1px solid #333; overflow: hidden; }
+        .diary-header { display: flex; justify-content: space-between; align-items: center; padding: 15px; cursor: pointer; background: rgba(0,0,0,0.2); }
+        .diary-title { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; color: #aaa; display: flex; align-items: center; gap: 8px;}
+        .diary-content { padding: 0 15px 15px 15px; display: none; }
+        .diary-content.open { display: block; animation: fadeIn 0.2s; }
+        .chevron { transition: transform 0.3s; font-size: 0.7rem; }
+        .chevron.open { transform: rotate(180deg); }
+        .diary-textarea { width: 100%; min-height: 100px; background: #000; border: 1px solid #444; color: #fff; border-radius: 8px; padding: 10px; font-family: inherit; font-size: 0.9rem; resize: vertical; outline:none; margin-top: 10px; }
         .diary-textarea:focus { border-color: var(--active-history); }
+        .badge-notes { background: #444; color: #fff; font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; text-transform: none; font-weight: normal; }
 
         .detail-header { padding: 15px 20px 5px; font-size: 0.8rem; color: #666; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid #222; }
         .log-item { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; border-bottom: 1px solid #333; font-size: 0.9rem; }
@@ -247,7 +254,7 @@
     <input type="file" id="fileInput" style="display:none" onchange="app.importData(this)">
 
     <script>
-        // Registrar ChartDataLabels (El plugin para pintar los porcentajes)
+        // Registrar ChartDataLabels
         Chart.register(ChartDataLabels);
 
         if ('serviceWorker' in navigator) {
@@ -256,19 +263,18 @@
 
         const { jsPDF } = window.jspdf;
 
-        // Colores Chart.js 
         const CHART_COLORS = {
             'Rata': '#FFB7B2', 'Segregar': '#FFDAC1', 'Escáner': '#E2F0CB', 'Voluminoso': '#B5EAD7',
             'Alimentación': '#C7CEEA', 'Rampas': '#E0BBE4', 'Top/Cosmos': '#F3E5AB', 'Hoffmann': '#F6EAC2', 
             'Descanso': '#A7C7E7', 'Otros': '#D3D3D3', 'automatización': '#FFA500'
         };
 
-        class RataTrackerV15 {
+        class RataTrackerV16 {
             constructor() {
                 this.state = { 
                     task: null, isRunning: false, startTime: null, 
                     isAuto: false, autoStart: null, history: [], 
-                    diaries: {}, // NUEVO: Diccionario para guardar el diario { "2026-03-05": "texto..." }
+                    diaries: {}, // Diccionario para guardar el diario
                     filterMode: 'day', currentDate: new Date().getTime() 
                 };
                 this.autoTriggers = ["Alimentación", "Rampas", "Top/Cosmos"];
@@ -300,7 +306,6 @@
                 this.renderHistory();
             }
 
-            // SALTO AL CALENDARIO DIRECTO
             jumpToDate(val) {
                 if(!val) return;
                 const [y, m, d] = val.split('-');
@@ -364,6 +369,17 @@
                 if(!this.state.diaries) this.state.diaries = {};
                 this.state.diaries[key] = text;
                 this.save();
+                
+                // Actualizar el título dinámicamente si escribe o borra todo
+                const titleBadge = document.getElementById('diaryBadge');
+                if(titleBadge) {
+                    if(text.trim().length > 0) {
+                        titleBadge.innerText = "(Con notas)";
+                        titleBadge.style.display = "inline";
+                    } else {
+                        titleBadge.style.display = "none";
+                    }
+                }
             }
 
             copyDiary() {
@@ -379,10 +395,9 @@
                 this.updateDateLabel();
                 this.dom.container.innerHTML = "";
 
-                // Siempre mostramos el diario en el periodo correspondiente, haya o no haya datos de timer.
                 const hasData = data.length > 0;
 
-                // 1. Gráfica y Resumen (Si hay datos)
+                // 1. Gráfica y Resumen
                 if (hasData) {
                     const chartCanvas = document.createElement('canvas');
                     const chartDiv = document.createElement('div'); chartDiv.className = 'chart-container'; chartDiv.appendChild(chartCanvas); this.dom.container.appendChild(chartDiv); this.renderChart(chartCanvas, data);
@@ -400,22 +415,32 @@
                     this.dom.container.innerHTML += `<div style="text-align:center; padding:30px 20px 10px; color:#444">Sin actividad de tiempo en este periodo</div>`;
                 }
 
-                // 2. CAJÓN DEL DIARIO (Nuevo)
+                // 2. CAJÓN DEL DIARIO (ACORDEÓN)
                 const diaryBox = document.createElement('div');
                 diaryBox.className = 'diary-section';
                 const key = this.getCurrentPeriodKey();
                 const currentText = (this.state.diaries && this.state.diaries[key]) ? this.state.diaries[key] : "";
+                const hasNotes = currentText.trim().length > 0;
                 
                 diaryBox.innerHTML = `
-                    <div class="diary-header">
-                        <span class="diary-title">📓 Diario de notas</span>
-                        <button class="act-btn btn-csv" style="padding: 6px 12px; width:auto; flex:none; background:#333; color:#fff;" onclick="app.copyDiary()">Copiar</button>
+                    <div class="diary-header" onclick="document.getElementById('diaryContentContainer').classList.toggle('open'); document.getElementById('diaryChevron').classList.toggle('open');">
+                        <span class="diary-title">
+                            <span id="diaryChevron" class="chevron">▼</span> 
+                            📓 Diario
+                            <span id="diaryBadge" class="badge-notes" style="display: ${hasNotes ? 'inline' : 'none'}; margin-left:8px;">(Con notas)</span>
+                        </span>
+                        <span style="font-size:0.7rem; color:#666;">Toca para abrir</span>
                     </div>
-                    <textarea id="diaryInput" class="diary-textarea" placeholder="Escribe aquí las notas, ocurrencias o comentarios de este periodo..." oninput="app.saveDiary(this.value)">${currentText}</textarea>
+                    <div id="diaryContentContainer" class="diary-content">
+                        <textarea id="diaryInput" class="diary-textarea" placeholder="Escribe aquí las notas, incidencias o comentarios del periodo..." oninput="app.saveDiary(this.value)">${currentText}</textarea>
+                        <div style="display:flex; justify-content:flex-end; margin-top:10px;">
+                            <button class="act-btn btn-csv" style="padding: 8px 15px; width:auto; flex:none; background:#333; color:#fff;" onclick="app.copyDiary()">📋 Copiar Texto</button>
+                        </div>
+                    </div>
                 `;
                 this.dom.container.appendChild(diaryBox);
 
-                // 3. Lista Detallada (Si hay datos)
+                // 3. Lista Detallada
                 if (hasData) {
                     const header = document.createElement('div'); header.className = 'detail-header'; header.innerText = 'Detalle de registros'; this.dom.container.appendChild(header);
                     
@@ -464,16 +489,12 @@
                         responsive: true, maintainAspectRatio: false, 
                         plugins: { 
                             legend: { display: false },
-                            // CONFIGURACIÓN DE LOS PORCENTAJES SOBRE LA TARTA
                             datalabels: {
-                                color: '#000',
-                                font: { weight: 'bold', size: 11 },
+                                color: '#000', font: { weight: 'bold', size: 11 },
                                 formatter: (value, ctx) => {
-                                    let sum = 0;
-                                    ctx.chart.data.datasets[0].data.forEach(d => sum += d);
+                                    let sum = 0; ctx.chart.data.datasets[0].data.forEach(d => sum += d);
                                     if(sum === 0) return '';
                                     let pct = (value * 100 / sum);
-                                    // Solo muestra texto si el trozo es mayor al 5% para que no se amontone
                                     return pct > 5 ? pct.toFixed(0) + '%' : '';
                                 }
                             }
@@ -490,11 +511,10 @@
                 else if(this.state.filterMode === 'month') txt = d.toLocaleDateString(undefined, {month:'long', year:'numeric'});
                 else txt = d.getFullYear();
                 this.dom.lblCurrentDate.innerText = txt;
-                // Actualizar el valor del input hidden para que coincida con el día actual por si lo tocan
                 document.getElementById('nativeDatePicker').value = d.toISOString().split('T')[0];
             }
 
-            // --- EXPORTACIÓN Y EDICIÓN (Sin tocar el diario) ---
+            // --- EXPORTACIÓN Y EDICIÓN ---
             openExportModal(type) {
                 this.exportTypePending = type;
                 const range = this.getRangeTimes();
@@ -588,7 +608,6 @@
                         const importedData = JSON.parse(e.target.result); 
                         if(importedData.history && Array.isArray(importedData.history)) { 
                             this.state = importedData; 
-                            // Compatibilidad con backups antiguos de la V14 o inferiores
                             if(!this.state.diaries) this.state.diaries = {}; 
                             this.save(); 
                             alert("✅ Datos restaurados con éxito."); location.reload(); 
@@ -600,11 +619,11 @@
             download(content, name, mime) { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([content], {type:mime})); a.download = name; a.click(); }
             formatTime(ms) { const s = Math.floor(ms / 1000); return new Date(s * 1000).toISOString().substr(11, 8); }
             
-            save() { localStorage.setItem('rata_v15', JSON.stringify(this.state)); }
+            save() { localStorage.setItem('rata_v16', JSON.stringify(this.state)); }
             load() { 
-                const s = localStorage.getItem('rata_v15'); 
+                const s = localStorage.getItem('rata_v16'); 
                 if(!s) { 
-                    const old = localStorage.getItem('rata_v14') || localStorage.getItem('rata_v13'); 
+                    const old = localStorage.getItem('rata_v15') || localStorage.getItem('rata_v14'); 
                     if(old) { 
                         this.state = JSON.parse(old); 
                         if(!this.state.diaries) this.state.diaries = {}; 
@@ -617,8 +636,7 @@
             }
         }
 
-        const app = new RataTrackerV15();
+        const app = new RataTrackerV16();
     </script>
 </body>
 </html>
-
