@@ -11,7 +11,7 @@
     <link rel="manifest" href="./manifest.json">
     <link rel="apple-touch-icon" href="./icon.png">
 
-    <title>Rata Tracker V16</title>
+    <title>Rata Tracker V17</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet">
     
@@ -71,7 +71,7 @@
         /* CALENDARIO NAV */
         .date-nav { display: flex; justify-content: space-between; align-items: center; background: #222; padding: 10px 15px; color: #fff; border-bottom: 1px solid #333; }
         .date-nav button { background: none; border: none; color: var(--active-tracker); font-size: 1.5rem; cursor: pointer; padding: 0 10px; }
-        .date-display { font-size: 0.9rem; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; padding: 5px; }
+        .date-display { font-size: 0.9rem; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; padding: 5px; color:#fff;}
         .date-picker-wrapper { position: relative; display: inline-flex; align-items: center; justify-content: center; }
         .hidden-date-input { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 10; }
 
@@ -269,12 +269,12 @@
             'Descanso': '#A7C7E7', 'Otros': '#D3D3D3', 'automatización': '#FFA500'
         };
 
-        class RataTrackerV16 {
+        class RataTrackerV17 {
             constructor() {
                 this.state = { 
                     task: null, isRunning: false, startTime: null, 
                     isAuto: false, autoStart: null, history: [], 
-                    diaries: {}, // Diccionario para guardar el diario
+                    diaries: {}, // Diccionario seguro para diarios
                     filterMode: 'day', currentDate: new Date().getTime() 
                 };
                 this.autoTriggers = ["Alimentación", "Rampas", "Top/Cosmos"];
@@ -350,7 +350,7 @@
                 if (this.state.isAuto) { this.dom.lblAuto.innerText = "(ON)"; this.dom.autoBar.classList.add('auto-running'); } else { this.dom.lblAuto.innerText = "(Off)"; this.dom.autoBar.classList.remove('auto-running'); }
             }
 
-            // --- GENERADOR DE KEY PARA EL DIARIO ---
+            // --- LÓGICA DIARIO ---
             getCurrentPeriodKey() {
                 const d = new Date(this.state.currentDate);
                 const mode = this.state.filterMode;
@@ -370,15 +370,10 @@
                 this.state.diaries[key] = text;
                 this.save();
                 
-                // Actualizar el título dinámicamente si escribe o borra todo
                 const titleBadge = document.getElementById('diaryBadge');
                 if(titleBadge) {
-                    if(text.trim().length > 0) {
-                        titleBadge.innerText = "(Con notas)";
-                        titleBadge.style.display = "inline";
-                    } else {
-                        titleBadge.style.display = "none";
-                    }
+                    if(text.trim().length > 0) { titleBadge.innerText = "(Con notas)"; titleBadge.style.display = "inline"; } 
+                    else { titleBadge.style.display = "none"; }
                 }
             }
 
@@ -397,7 +392,7 @@
 
                 const hasData = data.length > 0;
 
-                // 1. Gráfica y Resumen
+                // 1. GRAFICA Y RESUMEN
                 if (hasData) {
                     const chartCanvas = document.createElement('canvas');
                     const chartDiv = document.createElement('div'); chartDiv.className = 'chart-container'; chartDiv.appendChild(chartCanvas); this.dom.container.appendChild(chartDiv); this.renderChart(chartCanvas, data);
@@ -407,7 +402,9 @@
                     let sumHtml = `<div class="sum-title">TOTALES (${this.getFilterName()})</div>`;
                     summaryData.forEach(s => { 
                         const isAuto = s.task === 'automatización' || s.task.includes('AUTOMATIZACIÓN');
-                        sumHtml += `<div class="sum-row"><span class="sum-task ${isAuto ? 'sum-auto' : ''}">${s.task}</span><span class="sum-time">${this.formatTime(s.total * 1000)} (${s.pct}%)</span></div>`; 
+                        // Mostramos guión en el porcentaje si es auto
+                        const pctText = isAuto ? '-' : s.pct + '%';
+                        sumHtml += `<div class="sum-row"><span class="sum-task ${isAuto ? 'sum-auto' : ''}">${s.task}</span><span class="sum-time">${this.formatTime(s.total * 1000)} (${pctText})</span></div>`; 
                     });
                     sumBox.innerHTML = sumHtml;
                     this.dom.container.appendChild(sumBox);
@@ -415,7 +412,7 @@
                     this.dom.container.innerHTML += `<div style="text-align:center; padding:30px 20px 10px; color:#444">Sin actividad de tiempo en este periodo</div>`;
                 }
 
-                // 2. CAJÓN DEL DIARIO (ACORDEÓN)
+                // 2. DIARIO CAJÓN (ACORDEÓN)
                 const diaryBox = document.createElement('div');
                 diaryBox.className = 'diary-section';
                 const key = this.getCurrentPeriodKey();
@@ -438,16 +435,15 @@
                         </div>
                     </div>
                 `;
-                this.dom.container.appendChild(diaryBox);
 
-                // 3. Lista Detallada
+                // 3. LISTA DETALLADA
+                const detailContainer = document.createElement('div');
                 if (hasData) {
-                    const header = document.createElement('div'); header.className = 'detail-header'; header.innerText = 'Detalle de registros'; this.dom.container.appendChild(header);
-                    
+                    const header = document.createElement('div'); header.className = 'detail-header'; header.innerText = 'Detalle de registros'; detailContainer.appendChild(header);
                     const listDiv = document.createElement('div');
                     data.forEach(item => {
                         let displayTask = item.task.replace('⚡ ', '');
-                        const isAuto = item.isAuto || item.task.includes('utomatización');
+                        const isAuto = item.isAuto || item.task.toLowerCase().includes('automatización');
                         
                         const el = document.createElement('div'); 
                         el.className = `log-item ${isAuto ? 'log-auto-border' : ''}`;
@@ -467,19 +463,29 @@
                         `;
                         listDiv.appendChild(el);
                     });
-                    this.dom.container.appendChild(listDiv);
+                    detailContainer.appendChild(listDiv);
+                }
+
+                // ORDEN VISUAL DEL DIARIO SEGÚN EL MODO
+                if (this.state.filterMode === 'day') {
+                    // En Día: El diario va al final (debajo de la lista de registros)
+                    this.dom.container.appendChild(detailContainer);
+                    this.dom.container.appendChild(diaryBox);
+                } else {
+                    // Semanas, Meses, Años: El diario va debajo del total y antes de la lista
+                    this.dom.container.appendChild(diaryBox);
+                    this.dom.container.appendChild(detailContainer);
                 }
             }
 
             renderChart(canvas, data) {
                 const summary = this.calculateSummary(data);
-                const labels = summary.map(s => s.task);
-                const values = summary.map(s => s.total);
-                const colors = summary.map(s => {
-                    let key = s.task;
-                    if(key === 'automatización' || key.includes('AUTOMATIZACIÓN')) return CHART_COLORS['automatización'];
-                    return CHART_COLORS[key] || '#D3D3D3';
-                });
+                // EXCLUIMOS AUTOMATIZACIÓN DE LA GRÁFICA PARA QUE NO SE SOLAPE/INFLE
+                const chartData = summary.filter(s => !s.task.toLowerCase().includes('automatización'));
+                
+                const labels = chartData.map(s => s.task);
+                const values = chartData.map(s => s.total);
+                const colors = chartData.map(s => CHART_COLORS[s.task] || '#D3D3D3');
 
                 if(this.chartInstance) this.chartInstance.destroy();
                 this.chartInstance = new Chart(canvas, {
@@ -490,12 +496,12 @@
                         plugins: { 
                             legend: { display: false },
                             datalabels: {
-                                color: '#000', font: { weight: 'bold', size: 11 },
+                                color: '#000', font: { weight: 'bold', size: 12 },
                                 formatter: (value, ctx) => {
                                     let sum = 0; ctx.chart.data.datasets[0].data.forEach(d => sum += d);
                                     if(sum === 0) return '';
                                     let pct = (value * 100 / sum);
-                                    return pct > 5 ? pct.toFixed(0) + '%' : '';
+                                    return pct > 5 ? pct.toFixed(0) + '%' : ''; // Oculta los muy pequeños
                                 }
                             }
                         } 
@@ -511,22 +517,25 @@
                 else if(this.state.filterMode === 'month') txt = d.toLocaleDateString(undefined, {month:'long', year:'numeric'});
                 else txt = d.getFullYear();
                 this.dom.lblCurrentDate.innerText = txt;
-                document.getElementById('nativeDatePicker').value = d.toISOString().split('T')[0];
+                // Sincronizar el input date invisible
+                const offset = d.getTimezoneOffset() * 60000;
+                document.getElementById('nativeDatePicker').value = new Date(d.getTime() - offset).toISOString().split('T')[0];
             }
 
             // --- EXPORTACIÓN Y EDICIÓN ---
             openExportModal(type) {
                 this.exportTypePending = type;
                 const range = this.getRangeTimes();
-                const toInput = (ts) => new Date(ts).toISOString().split('T')[0];
+                const toInput = (ts) => { const d = new Date(ts); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().split('T')[0]; };
                 document.getElementById('expStart').value = toInput(range.start);
                 document.getElementById('expEnd').value = toInput(range.end - 1);
                 document.getElementById('exportModal').style.display = 'flex';
             }
 
             exportCurrent() {
-                const data = this.getFilteredData();
-                this.doExport(data, this.exportTypePending, this.getFilterName());
+                const range = this.getRangeTimes();
+                const data = this.state.history.filter(i => i.start >= range.start && i.start < range.end);
+                this.doExport(data, this.exportTypePending, this.getFilterName(), range);
                 document.getElementById('exportModal').style.display = 'none';
             }
 
@@ -534,24 +543,72 @@
                 const s = new Date(document.getElementById('expStart').value).getTime();
                 const e = new Date(document.getElementById('expEnd').value).getTime() + 86400000; 
                 const data = this.state.history.filter(i => i.start >= s && i.start < e);
-                this.doExport(data, this.exportTypePending, "Personalizado");
+                this.doExport(data, this.exportTypePending, "Personalizado", {start: s, end: e});
                 document.getElementById('exportModal').style.display = 'none';
             }
 
-            doExport(data, type, periodName) {
-                if(data.length === 0) return alert("Sin datos de tiempo para exportar");
+            doExport(data, type, periodName, range) {
+                if(data.length === 0 && Object.keys(this.state.diaries || {}).length === 0) return alert("Sin datos ni diarios para exportar");
+                
                 const summary = this.calculateSummary(data);
+
                 if (type === 'csv') {
                     let csv = `REPORTE ${periodName.toUpperCase()}\n\nRESUMEN\nTarea,Tiempo\n`;
                     summary.forEach(s => csv += `${s.task},${this.formatTime(s.total*1000)}\n`);
                     csv += `\nDETALLE\nFecha,Hora,Tarea,Duracion\n`;
                     data.forEach(d => csv += `${new Date(d.start).toLocaleDateString()},${new Date(d.start).toLocaleTimeString()},${d.task},${this.formatTime(d.duration*1000)}\n`);
+                    
+                    // EXPORTAR DIARIOS EN CSV
+                    let diaryCsv = `\n\n--- DIARIOS ---\nFecha,Notas\n`;
+                    let hasDiaries = false;
+                    let currentDay = new Date(range.start);
+                    while(currentDay < new Date(range.end)) {
+                        const dayKey = `${currentDay.getFullYear()}-${currentDay.getMonth()+1}-${currentDay.getDate()}`;
+                        if (this.state.diaries && this.state.diaries[dayKey] && this.state.diaries[dayKey].trim() !== '') {
+                            hasDiaries = true;
+                            let safeText = this.state.diaries[dayKey].replace(/"/g, '""');
+                            diaryCsv += `${currentDay.toLocaleDateString()},"${safeText}"\n`;
+                        }
+                        currentDay.setDate(currentDay.getDate() + 1);
+                    }
+                    if(hasDiaries) csv += diaryCsv;
+
                     this.download(csv, `Rata_${periodName}.csv`, 'text/csv');
                 } else {
                     const doc = new jsPDF();
                     doc.setFontSize(16); doc.text(`Rata Tracker - ${periodName}`, 14, 20);
-                    doc.autoTable({ startY: 30, head: [['Tarea', 'Total', '%']], body: summary.map(s => [s.task, this.formatTime(s.total*1000), s.pct+'%']) });
-                    doc.autoTable({ startY: doc.lastAutoTable.finalY + 10, head: [['Fecha', 'Tarea', 'Duración']], body: data.map(d => [new Date(d.start).toLocaleString(), d.task, this.formatTime(d.duration*1000)]) });
+                    
+                    if(data.length > 0){
+                        doc.autoTable({ startY: 30, head: [['Tarea', 'Total', '%']], body: summary.map(s => {
+                            const isAuto = s.task.toLowerCase().includes('automatización');
+                            return [s.task, this.formatTime(s.total*1000), isAuto ? '-' : s.pct+'%'];
+                        }) });
+                        doc.autoTable({ startY: doc.lastAutoTable.finalY + 10, head: [['Fecha', 'Tarea', 'Duración']], body: data.map(d => [new Date(d.start).toLocaleString(), d.task, this.formatTime(d.duration*1000)]) });
+                    }
+
+                    // EXPORTAR DIARIOS EN PDF (NUEVA TABLA AL FINAL)
+                    const diaryRows = [];
+                    let currentDay = new Date(range.start);
+                    while(currentDay < new Date(range.end)) {
+                        const dayKey = `${currentDay.getFullYear()}-${currentDay.getMonth()+1}-${currentDay.getDate()}`;
+                        if (this.state.diaries && this.state.diaries[dayKey] && this.state.diaries[dayKey].trim() !== '') {
+                            diaryRows.push([currentDay.toLocaleDateString(), this.state.diaries[dayKey]]);
+                        }
+                        currentDay.setDate(currentDay.getDate() + 1);
+                    }
+
+                    if (diaryRows.length > 0) {
+                        const startY = doc.lastAutoTable ? doc.lastAutoTable.finalY + 15 : 30;
+                        doc.autoTable({
+                            startY: startY,
+                            head: [['Fecha', 'Diario / Notas']],
+                            body: diaryRows,
+                            theme: 'grid',
+                            styles: { fontSize: 10, cellPadding: 3 },
+                            columnStyles: { 0: { cellWidth: 30 } }
+                        });
+                    }
+
                     doc.save(`Rata_${periodName}.pdf`);
                 }
             }
@@ -567,7 +624,21 @@
                 return { start, end };
             }
             getFilteredData() { const r = this.getRangeTimes(); return this.state.history.filter(i => i.start >= r.start && i.start < r.end); }
-            calculateSummary(data) { const map = {}; let t=0; data.forEach(d => { if(!map[d.task]) map[d.task]=0; map[d.task]+=d.duration; t+=d.duration; }); return Object.keys(map).map(k => ({ task: k, total: map[k], pct: t>0?((map[k]/t)*100).toFixed(1):0 })).sort((a,b) => b.total - a.total); }
+            
+            calculateSummary(data) { 
+                const map = {}; let tBase=0; 
+                data.forEach(d => { 
+                    const isAuto = d.task.toLowerCase().includes('automatización');
+                    if(!map[d.task]) map[d.task]=0; 
+                    map[d.task]+=d.duration; 
+                    // NO sumar la automatización al tiempo base total para que los porcentajes no se diluyan
+                    if(!isAuto) tBase+=d.duration; 
+                }); 
+                return Object.keys(map).map(k => {
+                    const isAuto = k.toLowerCase().includes('automatización');
+                    return { task: k, total: map[k], pct: (tBase>0 && !isAuto)?((map[k]/tBase)*100).toFixed(1):0 };
+                }).sort((a,b) => b.total - a.total); 
+            }
             
             editItem(id) {
                 const item = this.state.history.find(i => i.id === id);
@@ -619,11 +690,11 @@
             download(content, name, mime) { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([content], {type:mime})); a.download = name; a.click(); }
             formatTime(ms) { const s = Math.floor(ms / 1000); return new Date(s * 1000).toISOString().substr(11, 8); }
             
-            save() { localStorage.setItem('rata_v16', JSON.stringify(this.state)); }
+            save() { localStorage.setItem('rata_v17', JSON.stringify(this.state)); }
             load() { 
-                const s = localStorage.getItem('rata_v16'); 
+                const s = localStorage.getItem('rata_v17'); 
                 if(!s) { 
-                    const old = localStorage.getItem('rata_v15') || localStorage.getItem('rata_v14'); 
+                    const old = localStorage.getItem('rata_v16') || localStorage.getItem('rata_v15') || localStorage.getItem('rata_v14'); 
                     if(old) { 
                         this.state = JSON.parse(old); 
                         if(!this.state.diaries) this.state.diaries = {}; 
@@ -636,7 +707,7 @@
             }
         }
 
-        const app = new RataTrackerV16();
+        const app = new RataTrackerV17();
     </script>
 </body>
 </html>
